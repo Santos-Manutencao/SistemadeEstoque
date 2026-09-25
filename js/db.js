@@ -241,6 +241,16 @@ class EstoqueDatabase {
   async add(storeName, item) {
     await this.readyPromise;
 
+    // Garante que não sejam cadastrados produtos com o mesmo código
+    if (storeName === 'produtos' && item.codigo) {
+      const prods = await this.getAll('produtos');
+      const codNorm = item.codigo.trim().toUpperCase();
+      const dup = prods.find(p => p.codigo && p.codigo.trim().toUpperCase() === codNorm);
+      if (dup) {
+        throw new Error(`Não é permitido cadastrar produtos com o mesmo código. O código "${item.codigo}" já está em uso pelo produto "${dup.nome}".`);
+      }
+    }
+
     if (this.useLocalStorage) {
       const key = `santos_${storeName}`;
       const list = JSON.parse(localStorage.getItem(key) || '[]');
@@ -309,6 +319,16 @@ class EstoqueDatabase {
 
   async update(storeName, item) {
     await this.readyPromise;
+
+    // Garante que a edição não utilize código já existente em outro produto
+    if (storeName === 'produtos' && item.codigo) {
+      const prods = await this.getAll('produtos');
+      const codNorm = item.codigo.trim().toUpperCase();
+      const dup = prods.find(p => p.id !== item.id && p.codigo && p.codigo.trim().toUpperCase() === codNorm);
+      if (dup) {
+        throw new Error(`Não é permitido duplicar códigos de produto. O código "${item.codigo}" já está em uso pelo produto "${dup.nome}".`);
+      }
+    }
 
     if (this.useLocalStorage) {
       const key = `santos_${storeName}`;

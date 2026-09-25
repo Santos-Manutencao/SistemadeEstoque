@@ -545,9 +545,23 @@ App.abrirModalNovoProduto = () => {
   App.tempPhotoBase64 = '';
   App.atualizarPreviewFoto('');
   
-  // Sugere um código se desejar
-  const nextNum = (App.produtos.length + 1).toString().padStart(3, '0');
-  document.getElementById('prod-codigo').value = `PRD-${nextNum}`;
+  // Limpa feedback visual de validação do código
+  const inputCod = document.getElementById('prod-codigo');
+  inputCod.style.borderColor = '';
+  const feedback = document.getElementById('prod-codigo-feedback');
+  if (feedback) {
+    feedback.style.display = 'none';
+    feedback.innerText = '';
+  }
+
+  // Sugere um código garantidamente único que não colida com nenhum existente
+  let counter = App.produtos.length + 1;
+  let suggestedCode = `PRD-${counter.toString().padStart(3, '0')}`;
+  while (App.produtos.some(p => p.codigo && p.codigo.trim().toUpperCase() === suggestedCode.toUpperCase())) {
+    counter++;
+    suggestedCode = `PRD-${counter.toString().padStart(3, '0')}`;
+  }
+  inputCod.value = suggestedCode;
   
   App.abrirModal('modal-produto');
 };
@@ -558,7 +572,17 @@ App.editarProduto = async (id) => {
 
   document.getElementById('produto-id').value = p.id;
   document.getElementById('modal-produto-titulo').innerText = 'Editar Produto';
-  document.getElementById('prod-codigo').value = p.codigo || '';
+  
+  const inputCod = document.getElementById('prod-codigo');
+  inputCod.value = p.codigo || '';
+  inputCod.style.borderColor = '';
+  
+  const feedback = document.getElementById('prod-codigo-feedback');
+  if (feedback) {
+    feedback.style.display = 'none';
+    feedback.innerText = '';
+  }
+
   document.getElementById('prod-nome').value = p.nome || '';
   document.getElementById('prod-categoria').value = p.categoria || 'Geral';
   document.getElementById('prod-unidade').value = p.unidade || 'UN';
@@ -574,6 +598,40 @@ App.editarProduto = async (id) => {
   App.abrirModal('modal-produto');
 };
 
+// Validação em tempo real ao digitar o código do produto
+App.validarCodigoProdutoEmTempoReal = () => {
+  const input = document.getElementById('prod-codigo');
+  const feedback = document.getElementById('prod-codigo-feedback');
+  if (!input || !feedback) return;
+
+  const codigo = input.value.trim();
+  const id = document.getElementById('produto-id')?.value;
+
+  if (!codigo) {
+    input.style.borderColor = '';
+    feedback.style.display = 'none';
+    feedback.innerText = '';
+    return;
+  }
+
+  const duplicado = App.produtos.find(p => 
+    p.codigo && p.codigo.trim().toUpperCase() === codigo.toUpperCase() &&
+    (!id || p.id !== Number(id))
+  );
+
+  if (duplicado) {
+    input.style.borderColor = '#f43f5e';
+    feedback.style.display = 'block';
+    feedback.style.color = '#f43f5e';
+    feedback.innerText = `⚠️ Código já cadastrado para: "${duplicado.nome}"`;
+  } else {
+    input.style.borderColor = '#10b981';
+    feedback.style.display = 'block';
+    feedback.style.color = '#10b981';
+    feedback.innerText = '✓ Código disponível para uso';
+  }
+};
+
 App.salvarProduto = async (e) => {
   e.preventDefault();
   const id = document.getElementById('produto-id').value;
@@ -587,8 +645,39 @@ App.salvarProduto = async (e) => {
   const localizacao = document.getElementById('prod-localizacao').value.trim();
   const descricao = document.getElementById('prod-descricao').value.trim();
 
+  // 1. Validação de Código Obrigatório
+  if (!codigo) {
+    App.mostrarToast('Por favor, informe o Código / SKU do produto.', 'warning');
+    const inputCod = document.getElementById('prod-codigo');
+    inputCod.focus();
+    inputCod.style.borderColor = '#f43f5e';
+    return;
+  }
+
+  // 2. Não permitir produtos com o mesmo código (duplicados)
+  const prodComMesmoCodigo = App.produtos.find(p => 
+    p.codigo && p.codigo.trim().toUpperCase() === codigo.toUpperCase() &&
+    (!id || p.id !== Number(id))
+  );
+
+  if (prodComMesmoCodigo) {
+    App.mostrarToast(`Não é permitido cadastrar produtos com o mesmo código! O código "${codigo}" já pertence ao produto "${prodComMesmoCodigo.nome}".`, 'danger');
+    const inputCod = document.getElementById('prod-codigo');
+    inputCod.focus();
+    inputCod.style.borderColor = '#f43f5e';
+    const feedback = document.getElementById('prod-codigo-feedback');
+    if (feedback) {
+      feedback.style.display = 'block';
+      feedback.style.color = '#f43f5e';
+      feedback.innerText = `⚠️ Código já em uso pelo produto: "${prodComMesmoCodigo.nome}"`;
+    }
+    return;
+  }
+
+  // 3. Validação do Nome do Produto
   if (!nome) {
     App.mostrarToast('Por favor, informe a descrição/nome do produto.', 'warning');
+    document.getElementById('prod-nome').focus();
     return;
   }
 
@@ -634,13 +723,18 @@ App.salvarProduto = async (e) => {
         prodExistente.estoqueAtual = estoqueInicial;
       }
 
-      await window.db.update('produtos', prodExistente);
-      App.mostrarToast('Produto atualizado com sucesso!', 'success');
+      try {
+        await window.db.update('produtos', prodExistente);
+        App.mostrarToast('Produto atualizado com sucesso!', 'success');
+      } catch (err) {
+        App.mostrarToast(err.message, 'danger');
+        return;
+      }
     }
   } else {
     // Novo Produto
     const novoProduto = {
-      codigo: codigo || `PRD-${Date.now().toString().slice(-4)}`,
+      codigo,
       nome,
       categoria,
       unidade,
@@ -654,8 +748,13 @@ App.salvarProduto = async (e) => {
       dataCadastro: new Date().toISOString()
     };
 
-    const newId = await window.db.add('produtos', novoProduto);
-    novoProduto.id = newId;
+    try {
+      const newId = await window.db.add('produtos', novoProduto);
+      novoProduto.id = newId;
+    } catch (err) {
+      App.mostrarToast(err.message, 'danger');
+      return;
+    }
 
     // Registra movimentação de Estoque Inicial caso > 0
     if (estoqueInicial > 0) {
