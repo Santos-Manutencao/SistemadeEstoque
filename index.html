@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Santos Manutenções - Sistema de Controle de Estoque</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/jpeg" href="logo_santos.jpg">
+</head>
+<body>
+
+  <!-- ========================================================================
+       TELA DE LOGIN E AUTENTICAÇÃO
+       ======================================================================== -->
+  <div id="tela-login" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="logo_santos.jpg" alt="Logo Santos Manutenções" class="login-logo">
+        <h2>SANTOS MANUTENÇÕES</h2>
+        <p>Sistema de Controle de Estoque & Almoxarifado</p>
+      </div>
+
+      <form id="form-login" onsubmit="App.submeterLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-usuario">Usuário ou Matrícula</label>
+          <div class="input-icon-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="login-usuario" class="form-control" placeholder="Ex: admin" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-senha">Senha de Acesso</label>
+          <div class="input-icon-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="login-senha" class="form-control" placeholder="Digite sua senha" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-pwd" onclick="App.alternarVisibilidadeSenha('login-senha')" title="Mostrar/Ocultar Senha">👁️</button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.825rem; cursor: pointer; color: var(--text-muted);">
+            <input type="checkbox" id="login-lembrar" checked>
+            Manter conectado neste computador
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; font-weight: 700;">
+          Entrar no Sistema
+        </button>
+
+        <div class="login-hint-box">
+          <div style="font-weight: 700; margin-bottom: 2px;">🔑 Acesso Inicial do Almoxarifado:</div>
+          <div>Usuário: <code>admin</code> &nbsp;|&nbsp; Senha: <code>santos123</code></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       CABEÇALHO PRINCIPAL
+       ======================================================================== -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <img src="logo_santos.jpg" alt="Logo Santos Manutenções" class="brand-logo-img">
+        <div class="brand-info">
+          <h1>
+            SANTOS MANUTENÇÕES
+            <span class="brand-badge">Almoxarifado</span>
+          </h1>
+          <div class="brand-subtitle">Sistema Integrado de Gestão e Controle de Estoque</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Indicador de Salvamento Automático -->
+        <div class="sync-indicator" id="sync-status" title="Todas as movimentações e cadastros são salvos de forma automática">
+          <span class="sync-dot"></span>
+          <span id="sync-status-text">Salvo automaticamente</span>
+        </div>
+
+        <!-- Alternador de Tema -->
+        <button class="btn btn-outline" id="btn-theme-toggle" onclick="App.alternarTema()" title="Alternar entre Modo Claro e Escuro" style="border-radius: 9999px; font-size: 0.8rem; padding: 0.45rem 0.85rem;">
+          <span id="theme-toggle-icon">☀️</span>
+          <span id="theme-toggle-text">Modo Claro</span>
+        </button>
+
+        <!-- Sessão do Usuário -->
+        <div class="user-session-badge" id="user-session-badge" style="display: none;">
+          <span>👤 <strong id="header-user-name">Administrador</strong></span>
+          <button class="btn btn-outline btn-sm" onclick="App.realizarLogout()" title="Sair da Conta" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; border-color: rgba(244, 63, 94, 0.4); color: #f43f5e;">
+            Sair ➔
+          </button>
+        </div>
+
+        <button class="btn btn-success" onclick="App.abrirModalEntrada()" title="Registrar Entrada de Material">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          + Entrada
+        </button>
+
+        <button class="btn btn-danger" onclick="App.abrirModalSaida()" title="Registrar Retirada / Saída de Material">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          - Retirada
+        </button>
+
+        <button class="btn btn-primary" onclick="App.abrirModalNovoProduto()" title="Cadastrar Novo Produto">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          + Novo Produto
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       BARRA DE NAVEGAÇÃO DE ABAS
+       ======================================================================== -->
+  <nav class="app-nav">
+    <div class="nav-container">
+      <button class="nav-tab active" data-tab="dashboard" onclick="App.mudarAba('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard Geral
+      </button>
+
+      <button class="nav-tab" data-tab="produtos" onclick="App.mudarAba('produtos')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Catálogo de Produtos
+      </button>
+
+      <button class="nav-tab" data-tab="movimentacoes" onclick="App.mudarAba('movimentacoes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Entradas e Saídas
+      </button>
+
+      <button class="nav-tab" data-tab="colaboradores" onclick="App.mudarAba('colaboradores')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Colaboradores & Unidades
+      </button>
+
+      <button class="nav-tab" data-tab="relatorios" onclick="App.mudarAba('relatorios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Relatórios & Cautelas
+      </button>
+
+      <button class="nav-tab" data-tab="config" onclick="App.mudarAba('config')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Backup & Configuração
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================================
+       CONTEÚDO PRINCIPAL (PAINÉIS)
+       ======================================================================== -->
+  <main class="main-wrapper" id="main-content">
+
+    <!-- 1. ABA: DASHBOARD -->
+    <section class="tab-pane active" id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-title">Total de Itens Físicos</span>
+            <span class="stat-value" id="stat-total-itens">0</span>
+            <span class="stat-desc">Soma de todas as unidades</span>
+          </div>
+          <div class="stat-icon icon-blue">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-title">Valor Total em Estoque</span>
+            <span class="stat-value" id="stat-valor-estoque">R$ 0,00</span>
+            <span class="stat-desc">Patrimônio total calculado</span>
+          </div>
+          <div class="stat-icon icon-purple">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-title">Entradas no Mês</span>
+            <span class="stat-value" style="color: #10b981;" id="stat-entradas-mes">0</span>
+            <span class="stat-desc">Reposições e compras</span>
+          </div>
+          <div class="stat-icon icon-green">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-title">Saídas no Mês</span>
+            <span class="stat-value" style="color: #f43f5e;" id="stat-saidas-mes">0</span>
+            <span class="stat-desc">Retiradas para unidades</span>
+          </div>
+          <div class="stat-icon icon-rose">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card" style="cursor: pointer;" onclick="App.mudarAba('produtos'); document.getElementById('filtro-produto-status').value='baixo'; App.statusFiltro='baixo'; App.renderizarProdutos();" title="Clique para filtrar itens em alerta">
+          <div class="stat-info">
+            <span class="stat-title">Estoque Baixo / Crítico</span>
+            <span class="stat-value" style="color: #f59e0b;" id="stat-itens-criticos">0</span>
+            <span class="stat-desc">Abaixo do estoque mínimo</span>
+          </div>
+          <div class="stat-icon icon-amber">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Consumo por Unidade -->
+        <div class="card-panel" style="margin-bottom: 0;">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+              Consumo por Unidade de Trabalho
+            </div>
+            <span style="font-size: 0.75rem; color: #94a3b8;">CDA, TCS, TSA, ITAMINAS, ADM</span>
+          </div>
+          <div class="panel-body">
+            <div class="unit-consumption-list" id="unit-consumption-bars">
+              <!-- Barras geradas dinamicamente -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Acesso Rápido / Destaques da Empresa -->
+        <div class="card-panel" style="margin-bottom: 0;">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Almoxarifado Santos Manutenções
+            </div>
+          </div>
+          <div class="panel-body">
+            <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 1.25rem;">
+              Controle unificado de ferramentas, EPIs, consumíveis e peças para atendimento das frentes de manutenção nas unidades operacionais.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <button class="btn btn-primary" onclick="App.abrirModalSaida()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nova Retirada de Material para Colaborador
+              </button>
+              <button class="btn btn-success" onclick="App.abrirModalEntrada()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Entrada / Recebimento de Mercadoria
+              </button>
+              <button class="btn btn-secondary" onclick="App.gerarRelatorioPosicaoEstoque()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimir Posição Atual de Estoque (A4)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Últimas Movimentações no Dashboard -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Últimas Movimentações Registradas
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="App.mudarAba('movimentacoes')">Ver Histórico Completo ➔</button>
+        </div>
+        <div class="panel-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Tipo</th>
+                  <th>Produto / Material</th>
+                  <th>Qtd</th>
+                  <th>Destino / Responsável</th>
+                  <th>Valor Total</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-recent-movs">
+                <!-- Preenchido via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. ABA: CATÁLOGO DE PRODUTOS -->
+    <section class="tab-pane" id="tab-produtos">
+      <div class="toolbar-bar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="filtro-produto-busca" class="form-control" placeholder="Buscar por código, nome do material, descrição ou prateleira...">
+        </div>
+
+        <div class="filter-group">
+          <select id="filtro-produto-categoria" class="form-select" style="min-width: 150px;">
+            <option value="">Todas as Categorias</option>
+            <option value="EPI">EPI</option>
+            <option value="Ferramentas">Ferramentas</option>
+            <option value="Consumíveis">Consumíveis</option>
+            <option value="Lubrificantes">Lubrificantes & Químicos</option>
+            <option value="Peças Mecânicas">Peças Mecânicas</option>
+            <option value="Elétrica">Elétrica</option>
+            <option value="Outros">Outros</option>
+          </select>
+
+          <select id="filtro-produto-status" class="form-select" style="min-width: 140px;">
+            <option value="">Todos os Status</option>
+            <option value="normal">Estoque Normal</option>
+            <option value="baixo">Estoque Baixo</option>
+            <option value="zerado">Estoque Zerado</option>
+          </select>
+
+          <!-- Alternador Grid / Tabela -->
+          <div style="display: flex; background: #0f172a; border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden;">
+            <button class="btn btn-sm btn-outline active" id="btn-view-grid" style="border: none; border-radius: 0;" onclick="App.alternarVisualizacaoProdutos('grid')" title="Visualização em Grade">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+            <button class="btn btn-sm btn-outline" id="btn-view-table" style="border: none; border-radius: 0;" onclick="App.alternarVisualizacaoProdutos('table')" title="Visualização em Lista">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+          </div>
+
+          <button class="btn btn-outline" onclick="App.exportarProdutosCSV()" title="Exportar Catálogo para Excel / CSV">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSV
+          </button>
+
+          <button class="btn btn-primary" onclick="App.abrirModalNovoProduto()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            + Cadastrar Produto
+          </button>
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;" id="products-count">
+        Carregando produtos...
+      </div>
+
+      <!-- Container Grade -->
+      <div class="products-grid" id="products-grid-container">
+        <!-- Renderizado dinamicamente via app.js -->
+      </div>
+
+      <!-- Container Tabela -->
+      <div class="card-panel" id="products-table-container" style="display: none; margin-top: 1rem;">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Código</th>
+                <th>Nome / Descrição</th>
+                <th>Categoria</th>
+                <th>Estoque Atual</th>
+                <th>Valor Unit.</th>
+                <th>Valor Total</th>
+                <th>Status</th>
+                <th style="text-align: right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. ABA: MOVIMENTAÇÕES (ENTRADAS E SAÍDAS) -->
+    <section class="tab-pane" id="tab-movimentacoes">
+      <div class="toolbar-bar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="busca-mov-texto" class="form-control" placeholder="Buscar por colaborador, matrícula, material, código ou motivo...">
+        </div>
+
+        <div class="filter-group">
+          <select id="filtro-mov-tipo" class="form-select" style="min-width: 140px;">
+            <option value="">Todas Movimentações</option>
+            <option value="ENTRADA">Apenas Entradas</option>
+            <option value="SAIDA">Apenas Saídas / Retiradas</option>
+          </select>
+
+          <select id="filtro-mov-unidade" class="form-select" style="min-width: 150px;">
+            <option value="">Todas as Unidades</option>
+            <option value="CDA">Unidade CDA</option>
+            <option value="TCS">Unidade TCS</option>
+            <option value="TSA">Unidade TSA</option>
+            <option value="ITAMINAS">Unidade ITAMINAS</option>
+            <option value="ADM">Unidade ADM</option>
+          </select>
+
+          <button class="btn btn-outline" onclick="App.exportarMovimentacoesCSV()" title="Exportar Histórico para Planilha">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar CSV
+          </button>
+
+          <button class="btn btn-success" onclick="App.abrirModalEntrada()">+ Nova Entrada</button>
+          <button class="btn btn-danger" onclick="App.abrirModalSaida()">- Nova Retirada</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Data / Hora</th>
+                <th>Tipo</th>
+                <th>Material</th>
+                <th>Quantidade</th>
+                <th>Valor Total</th>
+                <th>Colaborador / Fornecedor</th>
+                <th>Unidade Destino</th>
+                <th style="text-align: right;">Cautela / Recibo</th>
+              </tr>
+            </thead>
+            <tbody id="movimentacoes-table-body">
+              <!-- Renderizado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. ABA: COLABORADORES & UNIDADES -->
+    <section class="tab-pane" id="tab-colaboradores">
+      <div class="toolbar-bar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="busca-colab-texto" class="form-control" placeholder="Buscar por matrícula, nome do colaborador, cargo ou CPF...">
+        </div>
+
+        <div class="filter-group">
+          <select id="filtro-colab-local" class="form-select" style="min-width: 170px;">
+            <option value="">Todas as Unidades</option>
+            <option value="CDA">Unidade CDA</option>
+            <option value="TCS">Unidade TCS</option>
+            <option value="TSA">Unidade TSA</option>
+            <option value="ITAMINAS">Unidade ITAMINAS</option>
+            <option value="ADM">Unidade ADM</option>
+          </select>
+
+          <span class="badge badge-unit" id="colab-count-badge">78 colaboradores</span>
+
+          <button class="btn btn-primary" onclick="App.abrirModalNovoColaborador()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            + Novo Colaborador
+          </button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Matrícula</th>
+                <th>Nome Completo</th>
+                <th>CPF</th>
+                <th>Cargo / Função</th>
+                <th>Unidade de Trabalho</th>
+                <th style="text-align: right;">Histórico de Retiradas</th>
+              </tr>
+            </thead>
+            <tbody id="colaboradores-table-body">
+              <!-- Renderizado via app.js com os 78 colaboradores fornecidos -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. ABA: RELATÓRIOS & CAUTELAS -->
+    <section class="tab-pane" id="tab-relatorios">
+      <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 1.5rem;">
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-title">Valor Patrimonial Atual</span>
+            <span class="stat-value" id="rel-resumo-valor">R$ 0,00</span>
+          </div>
+          <div class="stat-icon icon-purple">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-title">Volume Físico Total</span>
+            <span class="stat-value" id="rel-resumo-itens">0</span>
+          </div>
+          <div class="stat-icon icon-blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-title">Total de Movimentações</span>
+            <span class="stat-value" id="rel-resumo-movs">0</span>
+          </div>
+          <div class="stat-icon icon-green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+        
+        <!-- Relatório 1: Posição de Estoque -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Relatório de Posição de Estoque (Inventário)
+            </div>
+          </div>
+          <div class="panel-body">
+            <p style="color: #cbd5e1; font-size: 0.88rem; margin-bottom: 1.25rem;">
+              Gera documento oficial consolidado contendo lista de todos os materiais, código, estoques atuais, valores unitários e totalização patrimonial com campos para assinatura.
+            </p>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="App.gerarRelatorioPosicaoEstoque()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimir Relatório (A4/PDF)
+              </button>
+              <button class="btn btn-outline" onclick="App.exportarProdutosCSV()">
+                📥 Baixar Excel / CSV
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Relatório 2: Extrato de Movimentações -->
+        <div class="card-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Extrato Filtrado de Movimentações
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-row" style="margin-bottom: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Data Inicial</label>
+                <input type="date" id="filtro-rel-inicio" class="form-control">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Data Final</label>
+                <input type="date" id="filtro-rel-fim" class="form-control">
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 1.25rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Tipo</label>
+                <select id="filtro-rel-tipo" class="form-select">
+                  <option value="">Todas (Entradas e Saídas)</option>
+                  <option value="ENTRADA">Apenas Entradas</option>
+                  <option value="SAIDA">Apenas Saídas</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Unidade</label>
+                <select id="filtro-rel-unidade" class="form-select">
+                  <option value="">Todas as Unidades</option>
+                  <option value="CDA">CDA</option>
+                  <option value="TCS">TCS</option>
+                  <option value="TSA">TSA</option>
+                  <option value="ITAMINAS">ITAMINAS</option>
+                  <option value="ADM">ADM</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="App.gerarRelatorioMovimentacoes()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimir Extrato Filtrado (A4/PDF)
+              </button>
+              <button class="btn btn-outline" onclick="App.exportarMovimentacoesCSV()">
+                📥 Baixar Histórico CSV
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 6. ABA: CONFIGURAÇÃO & BACKUP -->
+    <section class="tab-pane" id="tab-config">
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Segurança de Dados, Backup & Restauração
+          </div>
+        </div>
+        <div class="panel-body">
+          <p style="color: #cbd5e1; margin-bottom: 1.5rem; line-height: 1.6;">
+            O sistema utiliza tecnologia de banco de dados local ultra-rápida (IndexedDB) para guardar fotos e movimentações no seu computador. Para máxima segurança, você pode exportar cópias de segurança periodicamente e guardá-las em um pendrive ou pasta na nuvem.
+          </p>
+
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <!-- Exportar Backup -->
+            <div style="flex: 1; min-width: 280px; background: #0f172a; padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid #334155;">
+              <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 1rem;">Exportar Cópia de Segurança (Backup)</h4>
+              <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem;">
+                Gera um arquivo <code>.json</code> contendo todos os produtos, fotos, colaboradores e histórico de movimentações.
+              </p>
+              <button class="btn btn-primary" onclick="App.exportarBackupCompleto()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Fazer Download do Backup Completo
+              </button>
+            </div>
+
+            <!-- Restaurar Backup -->
+            <div style="flex: 1; min-width: 280px; background: #0f172a; padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid #334155;">
+              <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 1rem;">Restaurar Backup Existente</h4>
+              <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem;">
+                Selecione um arquivo de backup previamente exportado para recuperar todas as informações do almoxarifado.
+              </p>
+              <input type="file" id="input-backup-file" accept=".json" style="display: none;">
+              <button class="btn btn-secondary" onclick="document.getElementById('input-backup-file').click()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Selecionar Arquivo de Backup (.json)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gerenciamento de Senha de Acesso -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Segurança & Alteração de Senha do Administrador
+          </div>
+        </div>
+        <div class="panel-body">
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+            Altere a senha de acesso padrão (<code>santos123</code>) para garantir a segurança dos dados do almoxarifado.
+          </p>
+          <form id="form-alterar-senha" onsubmit="App.salvarNovaSenha(event)" style="max-width: 460px;">
+            <div class="form-group">
+              <label class="form-label">Senha Atual <span class="required">*</span></label>
+              <input type="password" id="senha-atual" class="form-control" placeholder="Digite a senha atual" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nova Senha <span class="required">*</span></label>
+              <input type="password" id="senha-nova" class="form-control" placeholder="Mínimo de 4 dígitos" required minlength="4">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmar Nova Senha <span class="required">*</span></label>
+              <input type="password" id="senha-confirma" class="form-control" placeholder="Digite novamente a nova senha" required minlength="4">
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Salvar Nova Senha
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAIS DO SISTEMA
+       ======================================================================== -->
+
+  <!-- MODAL: CADASTRO / EDIÇÃO DE PRODUTO -->
+  <div class="modal-overlay" id="modal-produto">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-produto-titulo">Cadastrar Novo Produto</h3>
+        <button class="modal-close" onclick="App.fecharModal('modal-produto')">✕</button>
+      </div>
+      <form id="form-produto">
+        <div class="modal-body">
+          <input type="hidden" id="produto-id">
+
+          <div class="modal-product-layout">
+            <!-- Coluna da Esquerda: Foto e Localização -->
+            <div class="modal-product-side">
+              <div class="form-group" style="margin-bottom: 0.65rem;">
+                <label class="form-label">Foto do Produto</label>
+                <input type="file" id="prod-foto-input" accept="image/*" style="display: none;">
+                
+                <div class="photo-upload-area" id="photo-upload-placeholder" onclick="document.getElementById('prod-foto-input').click()">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span style="font-size: 0.78rem; font-weight: 600;">Adicionar Foto</span>
+                  <span class="form-hint" style="font-size: 0.7rem;">PNG, JPG, WEBP</span>
+                </div>
+
+                <div class="photo-preview-container" id="photo-preview-container">
+                  <img id="photo-preview-img" src="" alt="Pré-visualização">
+                  <button type="button" class="btn-remove-photo" onclick="App.removerFoto(event)">✕ Remover</button>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Localização</label>
+                <input type="text" id="prod-localizacao" class="form-control" placeholder="Prateleira / Gaveta">
+              </div>
+            </div>
+
+            <!-- Coluna da Direita: Dados Cadastrais -->
+            <div class="modal-product-main">
+              <div class="form-row" style="margin-bottom: 0.65rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Código / SKU</label>
+                  <input type="text" id="prod-codigo" class="form-control" placeholder="Ex: PRD-001">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Categoria <span class="required">*</span></label>
+                  <select id="prod-categoria" class="form-select" required>
+                    <option value="EPI">EPI</option>
+                    <option value="Ferramentas">Ferramentas</option>
+                    <option value="Consumíveis">Consumíveis</option>
+                    <option value="Lubrificantes">Lubrificantes & Químicos</option>
+                    <option value="Peças Mecânicas">Peças Mecânicas</option>
+                    <option value="Elétrica">Elétrica</option>
+                    <option value="Outros">Outros</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0.65rem;">
+                <label class="form-label">Nome / Descrição do Material <span class="required">*</span></label>
+                <input type="text" id="prod-nome" class="form-control" placeholder="Ex: Luva de Vaqueta Mista Térmica" required>
+              </div>
+
+              <div class="form-row" style="margin-bottom: 0.65rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Unidade <span class="required">*</span></label>
+                  <select id="prod-unidade" class="form-select" required>
+                    <option value="UN">UN - Unidade</option>
+                    <option value="PAR">PAR - Par</option>
+                    <option value="KG">KG - Quilograma</option>
+                    <option value="M">M - Metro</option>
+                    <option value="LT">LT - Litro</option>
+                    <option value="CJ">CJ - Conjunto</option>
+                    <option value="CX">CX - Caixa</option>
+                    <option value="ROLO">ROLO - Rolo</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Valor Unitário (R$) <span class="required">*</span></label>
+                  <input type="number" step="0.01" min="0" id="prod-valor" class="form-control" placeholder="0.00" required>
+                </div>
+              </div>
+
+              <div class="form-row" style="margin-bottom: 0.65rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Estoque Inicial</label>
+                  <input type="number" step="1" min="0" id="prod-estoque-inicial" class="form-control" placeholder="0" value="0">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Estoque Mínimo</label>
+                  <input type="number" step="1" min="0" id="prod-estoque-minimo" class="form-control" placeholder="5" value="5">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Observações / Especificação</label>
+                <input type="text" id="prod-descricao" class="form-control" placeholder="Normas CA, fabricante, detalhes técnicos...">
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.fecharModal('modal-produto')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Produto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR ENTRADA -->
+  <div class="modal-overlay" id="modal-entrada">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #34d399;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Registrar Entrada / Reposição de Estoque
+        </h3>
+        <button class="modal-close" onclick="App.fecharModal('modal-entrada')">✕</button>
+      </div>
+      <form id="form-entrada">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Selecione o Produto / Material <span class="required">*</span></label>
+            <select id="entrada-produto" class="form-select" required>
+              <!-- Preenchido via app.js -->
+            </select>
+            <div id="entrada-produto-info" style="margin-top: 0.5rem;"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantidade Recebida <span class="required">*</span></label>
+              <input type="number" step="0.01" min="0.01" id="entrada-qtd" class="form-control" placeholder="Ex: 50" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Valor Unitário da Entrada (R$)</label>
+              <input type="number" step="0.01" min="0" id="entrada-valor-unitario" class="form-control" placeholder="0.00">
+              <span class="form-hint">Deixe em branco para manter o preço cadastrado</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Data e Hora do Recebimento <span class="required">*</span></label>
+              <input type="datetime-local" id="entrada-data" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Fornecedor ou Nº Nota Fiscal</label>
+              <input type="text" id="entrada-fornecedor" class="form-control" placeholder="Ex: NF 14528 - Distribuidora Santos">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Motivo / Justificativa</label>
+              <input type="text" id="entrada-motivo" class="form-control" placeholder="Ex: Compra periódica, devolução de obra...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Responsável pelo Recebimento</label>
+              <input type="text" id="entrada-responsavel" class="form-control" placeholder="Ex: Almoxarife" value="Almoxarifado Santos">
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.fecharModal('modal-entrada')">Cancelar</button>
+          <button type="submit" class="btn btn-success">Confirmar Entrada</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR RETIRADA / SAÍDA -->
+  <div class="modal-overlay" id="modal-saida">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #fb7185;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+          Registrar Retirada / Saída de Material
+        </h3>
+        <button class="modal-close" onclick="App.fecharModal('modal-saida')">✕</button>
+      </div>
+      <form id="form-saida">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Selecione o Material a Retirar <span class="required">*</span></label>
+            <select id="saida-produto" class="form-select" required>
+              <!-- Preenchido dinamicamente -->
+            </select>
+            <div id="saida-produto-info" style="margin-top: 0.5rem;"></div>
+          </div>
+
+          <!-- Seleção do Colaborador com busca inteligente -->
+          <div class="form-group">
+            <label class="form-label">Colaborador que Retirou o Produto <span class="required">*</span></label>
+            <input type="text" id="saida-funcionario-input" class="form-control" list="colaboradores-datalist" placeholder="Digite a matrícula ou nome do colaborador..." autocomplete="off" required>
+            <datalist id="colaboradores-datalist">
+              <!-- Preenchido com os 78 funcionários via app.js -->
+            </datalist>
+            <span class="form-hint">A lista de funcionários pré-cadastrada preencherá a unidade automaticamente</span>
+
+            <!-- Caixa de Informações do Colaborador Selecionado -->
+            <div id="saida-emp-info" class="employee-info-box" style="display: none;"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantidade a Retirar <span class="required">*</span></label>
+              <input type="number" step="0.01" min="0.01" id="saida-qtd" class="form-control" placeholder="Ex: 2" required>
+            </div>
+
+            <!-- Campo de Unidade (preenchido automaticamente conforme o funcionário) -->
+            <div class="form-group">
+              <label class="form-label">Unidade de Destino do Material <span class="required">*</span></label>
+              <select id="saida-unidade" class="form-select" required>
+                <option value="">Selecione ou deixe o funcionário preencher</option>
+                <option value="CDA">CDA</option>
+                <option value="TCS">TCS</option>
+                <option value="TSA">TSA</option>
+                <option value="ITAMINAS">ITAMINAS</option>
+                <option value="ADM">ADM</option>
+              </select>
+              <span class="form-hint" style="color: #38bdf8;">Preenchido automaticamente pelo colaborador</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Data e Hora da Retirada <span class="required">*</span></label>
+              <input type="datetime-local" id="saida-data" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Ordem de Serviço / Aplicação</label>
+              <input type="text" id="saida-motivo" class="form-control" placeholder="Ex: Manutenção de Via, Turno Noite, OS-102">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Almoxarife Responsável pela Liberação</label>
+            <input type="text" id="saida-responsavel" class="form-control" value="Almoxarifado Central" placeholder="Responsável">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.fecharModal('modal-saida')">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Confirmar Retirada</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NOVO COLABORADOR -->
+  <div class="modal-overlay" id="modal-colaborador">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Cadastrar Novo Colaborador</h3>
+        <button class="modal-close" onclick="App.fecharModal('modal-colaborador')">✕</button>
+      </div>
+      <form id="form-colaborador">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Matrícula <span class="required">*</span></label>
+              <input type="text" id="colab-matricula" class="form-control" placeholder="Ex: 225" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CPF</label>
+              <input type="text" id="colab-cpf" class="form-control" placeholder="000.000.000-00">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nome Completo do Colaborador <span class="required">*</span></label>
+            <input type="text" id="colab-nome" class="form-control" placeholder="Ex: JOÃO SILVA" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Cargo / Função <span class="required">*</span></label>
+              <input type="text" id="colab-cargo" class="form-control" placeholder="Ex: MANTENEDOR" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Unidade / Local de Trabalho <span class="required">*</span></label>
+              <select id="colab-local" class="form-select" required>
+                <option value="CDA">CDA</option>
+                <option value="TCS">TCS</option>
+                <option value="TSA">TSA</option>
+                <option value="ITAMINAS">ITAMINAS</option>
+                <option value="ADM">ADM</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.fecharModal('modal-colaborador')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Colaborador</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: HISTÓRICO DE RETIRADAS DO COLABORADOR -->
+  <div class="modal-overlay" id="modal-historico-colaborador">
+    <div class="modal-dialog" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Histórico de Retiradas do Colaborador</h3>
+        <button class="modal-close" onclick="App.fecharModal('modal-historico-colaborador')">✕</button>
+      </div>
+      <div class="modal-body" id="modal-historico-conteudo">
+        <!-- Preenchido via app.js -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="App.fecharModal('modal-historico-colaborador')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ZOOM DA FOTO DO PRODUTO -->
+  <div class="modal-overlay" id="modal-zoom-foto">
+    <div class="modal-dialog" style="max-width: 600px; text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-zoom-title">Foto do Produto</h3>
+        <button class="modal-close" onclick="App.fecharModal('modal-zoom-foto')">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 1rem; background: #000;">
+        <img id="modal-zoom-img" src="" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: 4px;" alt="Zoom">
+      </div>
+    </div>
+  </div>
+
+  <!-- ÁREA DE NOTIFICAÇÕES (TOASTS) -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ÁREA EXCLUSIVA DE IMPRESSÃO (A4 / CAUTELAS / RELATÓRIOS) -->
+  <div id="print-area"></div>
+
+  <!-- SCRIPTS -->
+  <script src="js/data_colaboradores.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
