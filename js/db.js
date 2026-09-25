@@ -241,13 +241,18 @@ class EstoqueDatabase {
   async add(storeName, item) {
     await this.readyPromise;
 
-    // Garante que não sejam cadastrados produtos com o mesmo código
-    if (storeName === 'produtos' && item.codigo) {
+    // Garante que não sejam cadastrados produtos com o mesmo código e força caixa alta
+    if (storeName === 'produtos') {
+      const codNorm = String(item.codigo || '').trim().toUpperCase();
+      if (!codNorm) {
+        throw new Error('O código do produto é obrigatório.');
+      }
+      item.codigo = codNorm;
+
       const prods = await this.getAll('produtos');
-      const codNorm = item.codigo.trim().toUpperCase();
-      const dup = prods.find(p => p.codigo && p.codigo.trim().toUpperCase() === codNorm);
+      const dup = prods.find(p => String(p.codigo || '').trim().toUpperCase() === codNorm);
       if (dup) {
-        throw new Error(`Não é permitido cadastrar produtos com o mesmo código. O código "${item.codigo}" já está em uso pelo produto "${dup.nome}".`);
+        throw new Error(`Não é permitido cadastrar produtos com o mesmo código. O código "${codNorm}" já está em uso pelo produto "${dup.nome}".`);
       }
     }
 
@@ -320,13 +325,18 @@ class EstoqueDatabase {
   async update(storeName, item) {
     await this.readyPromise;
 
-    // Garante que a edição não utilize código já existente em outro produto
-    if (storeName === 'produtos' && item.codigo) {
+    // Garante que a edição não utilize código já existente em outro produto e força caixa alta
+    if (storeName === 'produtos') {
+      const codNorm = String(item.codigo || '').trim().toUpperCase();
+      if (!codNorm) {
+        throw new Error('O código do produto é obrigatório.');
+      }
+      item.codigo = codNorm;
+
       const prods = await this.getAll('produtos');
-      const codNorm = item.codigo.trim().toUpperCase();
-      const dup = prods.find(p => p.id !== item.id && p.codigo && p.codigo.trim().toUpperCase() === codNorm);
+      const dup = prods.find(p => String(p.id) !== String(item.id) && String(p.codigo || '').trim().toUpperCase() === codNorm);
       if (dup) {
-        throw new Error(`Não é permitido duplicar códigos de produto. O código "${item.codigo}" já está em uso pelo produto "${dup.nome}".`);
+        throw new Error(`Não é permitido duplicar códigos de produto. O código "${codNorm}" já está em uso pelo produto "${dup.nome}".`);
       }
     }
 

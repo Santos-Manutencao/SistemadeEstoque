@@ -223,6 +223,41 @@ App.carregarDados = async () => {
     localStorage.setItem('santos_limpeza_entradas_v2', 'true');
   }
 
+  // Normalização: assegura que TODOS os códigos existentes estejam em CAIXA ALTA e sem duplicidades
+  const codigosExistentes = new Map();
+  let baseModificada = false;
+  for (const p of App.produtos) {
+    let cod = String(p.codigo || '').trim().toUpperCase();
+    if (!cod) {
+      cod = `PRD-${(p.id || 1).toString().padStart(3, '0')}`;
+      p.codigo = cod;
+      baseModificada = true;
+    } else if (p.codigo !== cod) {
+      p.codigo = cod;
+      baseModificada = true;
+    }
+
+    if (codigosExistentes.has(cod)) {
+      let sufixo = 2;
+      let novoCod = `${cod}-${sufixo}`;
+      while (codigosExistentes.has(novoCod) || App.produtos.some(x => x !== p && String(x.codigo || '').trim().toUpperCase() === novoCod)) {
+        sufixo++;
+        novoCod = `${cod}-${sufixo}`;
+      }
+      p.codigo = novoCod;
+      codigosExistentes.set(novoCod, p.id);
+      baseModificada = true;
+    } else {
+      codigosExistentes.set(cod, p.id);
+    }
+  }
+
+  if (baseModificada) {
+    for (const p of App.produtos) {
+      await window.db.update('produtos', p);
+    }
+  }
+
   // Ordena movimentações por data decrescente
   App.movimentacoes.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
 };
@@ -553,13 +588,18 @@ App.abrirModalNovoProduto = () => {
     feedback.style.display = 'none';
     feedback.innerText = '';
   }
+  const btnSalvar = document.getElementById('btn-salvar-produto');
+  if (btnSalvar) {
+    btnSalvar.disabled = false;
+    btnSalvar.innerText = 'Salvar Produto';
+  }
 
-  // Sugere um código garantidamente único que não colida com nenhum existente
+  // Sugere um código garantidamente único em CAIXA ALTA
   let counter = App.produtos.length + 1;
-  let suggestedCode = `PRD-${counter.toString().padStart(3, '0')}`;
-  while (App.produtos.some(p => p.codigo && p.codigo.trim().toUpperCase() === suggestedCode.toUpperCase())) {
+  let suggestedCode = `PRD-${counter.toString().padStart(3, '0')}`.toUpperCase();
+  while (App.produtos.some(p => String(p.codigo || '').trim().toUpperCase() === suggestedCode)) {
     counter++;
-    suggestedCode = `PRD-${counter.toString().padStart(3, '0')}`;
+    suggestedCode = `PRD-${counter.toString().padStart(3, '0')}`.toUpperCase();
   }
   inputCod.value = suggestedCode;
   
@@ -574,7 +614,7 @@ App.editarProduto = async (id) => {
   document.getElementById('modal-produto-titulo').innerText = 'Editar Produto';
   
   const inputCod = document.getElementById('prod-codigo');
-  inputCod.value = p.codigo || '';
+  inputCod.value = String(p.codigo || '').trim().toUpperCase();
   inputCod.style.borderColor = '';
   
   const feedback = document.getElementById('prod-codigo-feedback');
@@ -582,11 +622,16 @@ App.editarProduto = async (id) => {
     feedback.style.display = 'none';
     feedback.innerText = '';
   }
+  const btnSalvar = document.getElementById('btn-salvar-produto');
+  if (btnSalvar) {
+    btnSalvar.disabled = false;
+    btnSalvar.innerText = 'Salvar Produto';
+  }
 
   document.getElementById('prod-nome').value = p.nome || '';
   document.getElementById('prod-categoria').value = p.categoria || 'Geral';
   document.getElementById('prod-unidade').value = p.unidade || 'UN';
-  document.getElementById('prod-valor').value = p.valorUnitario || '';
+  document.getElementById('prod-valor').value = p.valorUnitario !== undefined && p.valorUnitario !== null && p.valorUnitario !== 0 ? p.valorUnitario : '';
   document.getElementById('prod-estoque-inicial').value = p.estoqueAtual; // Modo de ajuste
   document.getElementById('prod-estoque-minimo').value = p.estoqueMinimo || 5;
   document.getElementById('prod-localizacao').value = p.localizacao || '';
@@ -598,193 +643,224 @@ App.editarProduto = async (id) => {
   App.abrirModal('modal-produto');
 };
 
-// Validação em tempo real ao digitar o código do produto
+// Validação em tempo real ao digitar o código do produto (sempre em CAIXA ALTA)
 App.validarCodigoProdutoEmTempoReal = () => {
   const input = document.getElementById('prod-codigo');
   const feedback = document.getElementById('prod-codigo-feedback');
+  const btnSalvar = document.getElementById('btn-salvar-produto');
   if (!input || !feedback) return;
 
-  const codigo = input.value.trim();
+  input.value = input.value.toUpperCase();
+  const codigo = String(input.value || '').trim().toUpperCase();
   const id = document.getElementById('produto-id')?.value;
 
   if (!codigo) {
     input.style.borderColor = '';
     feedback.style.display = 'none';
     feedback.innerText = '';
+    if (btnSalvar) btnSalvar.disabled = false;
     return;
   }
 
-  const duplicado = App.produtos.find(p => 
-    p.codigo && p.codigo.trim().toUpperCase() === codigo.toUpperCase() &&
-    (!id || p.id !== Number(id))
-  );
+  const duplicado = App.produtos.find(p => {
+    const codExistente = String(p.codigo || '').trim().toUpperCase();
+    return codExistente === codigo && (!id || String(p.id) !== String(id));
+  });
 
   if (duplicado) {
     input.style.borderColor = '#f43f5e';
     feedback.style.display = 'block';
     feedback.style.color = '#f43f5e';
-    feedback.innerText = `⚠️ Código já cadastrado para: "${duplicado.nome}"`;
+    feedback.innerText = `⚠️ CÓDIGO JÁ EM USO: cadastrado para "${duplicado.nome}". Escolha outro código.`;
+    if (btnSalvar) btnSalvar.disabled = true;
   } else {
     input.style.borderColor = '#10b981';
     feedback.style.display = 'block';
     feedback.style.color = '#10b981';
-    feedback.innerText = '✓ Código disponível para uso';
+    feedback.innerText = '✓ CÓDIGO DISPONÍVEL';
+    if (btnSalvar) btnSalvar.disabled = false;
   }
 };
 
 App.salvarProduto = async (e) => {
-  e.preventDefault();
-  const id = document.getElementById('produto-id').value;
-  const codigo = document.getElementById('prod-codigo').value.trim();
-  const nome = document.getElementById('prod-nome').value.trim();
-  const categoria = document.getElementById('prod-categoria').value;
-  const unidade = document.getElementById('prod-unidade').value;
-  const valorUnitario = parseFloat(document.getElementById('prod-valor').value) || 0;
-  const estoqueInicial = parseFloat(document.getElementById('prod-estoque-inicial').value) || 0;
-  const estoqueMinimo = parseFloat(document.getElementById('prod-estoque-minimo').value) || 0;
-  const localizacao = document.getElementById('prod-localizacao').value.trim();
-  const descricao = document.getElementById('prod-descricao').value.trim();
+  if (e && e.preventDefault) e.preventDefault();
 
-  // 1. Validação de Código Obrigatório
-  if (!codigo) {
-    App.mostrarToast('Por favor, informe o Código / SKU do produto.', 'warning');
-    const inputCod = document.getElementById('prod-codigo');
-    inputCod.focus();
-    inputCod.style.borderColor = '#f43f5e';
-    return;
+  // Trava anti-duplo clique e anti-concorrência
+  if (App.salvandoProduto) return;
+  App.salvandoProduto = true;
+
+  const btnSalvar = document.getElementById('btn-salvar-produto');
+  const txtOriginalBtn = btnSalvar ? btnSalvar.innerText : 'Salvar Produto';
+  if (btnSalvar) {
+    btnSalvar.disabled = true;
+    btnSalvar.innerText = 'Salvando...';
   }
 
-  // 2. Não permitir produtos com o mesmo código (duplicados)
-  const prodComMesmoCodigo = App.produtos.find(p => 
-    p.codigo && p.codigo.trim().toUpperCase() === codigo.toUpperCase() &&
-    (!id || p.id !== Number(id))
-  );
-
-  if (prodComMesmoCodigo) {
-    App.mostrarToast(`Não é permitido cadastrar produtos com o mesmo código! O código "${codigo}" já pertence ao produto "${prodComMesmoCodigo.nome}".`, 'danger');
+  try {
+    const id = document.getElementById('produto-id').value;
     const inputCod = document.getElementById('prod-codigo');
-    inputCod.focus();
-    inputCod.style.borderColor = '#f43f5e';
-    const feedback = document.getElementById('prod-codigo-feedback');
-    if (feedback) {
-      feedback.style.display = 'block';
-      feedback.style.color = '#f43f5e';
-      feedback.innerText = `⚠️ Código já em uso pelo produto: "${prodComMesmoCodigo.nome}"`;
+    if (inputCod) inputCod.value = inputCod.value.toUpperCase();
+    const codigo = String(inputCod ? inputCod.value : '').trim().toUpperCase();
+
+    const nome = (document.getElementById('prod-nome').value || '').trim();
+    const categoria = document.getElementById('prod-categoria').value;
+    const unidade = document.getElementById('prod-unidade').value;
+
+    // Campo Valor não é obrigatório: se vazio ou não informado, assume 0
+    const valorRaw = document.getElementById('prod-valor').value;
+    const valorUnitario = valorRaw !== '' && !isNaN(parseFloat(valorRaw)) ? parseFloat(valorRaw) : 0;
+
+    const estoqueInicial = parseFloat(document.getElementById('prod-estoque-inicial').value) || 0;
+    const estoqueMinimo = parseFloat(document.getElementById('prod-estoque-minimo').value) || 0;
+    const localizacao = (document.getElementById('prod-localizacao').value || '').trim();
+    const descricao = (document.getElementById('prod-descricao').value || '').trim();
+
+    // 1. Validação de Código Obrigatório
+    if (!codigo) {
+      App.mostrarToast('Por favor, informe o Código / SKU do produto.', 'warning');
+      if (inputCod) {
+        inputCod.focus();
+        inputCod.style.borderColor = '#f43f5e';
+      }
+      return;
     }
-    return;
-  }
 
-  // 3. Validação do Nome do Produto
-  if (!nome) {
-    App.mostrarToast('Por favor, informe a descrição/nome do produto.', 'warning');
-    document.getElementById('prod-nome').focus();
-    return;
-  }
+    // 2. Consulta banco atualizada para garantia de unicidade absoluta
+    const produtosNoBanco = await window.db.getAll('produtos');
+    const prodComMesmoCodigo = produtosNoBanco.find(p => {
+      const codCadastrado = String(p.codigo || '').trim().toUpperCase();
+      const mesmoCodigo = codCadastrado === codigo;
+      const outroId = !id || String(p.id) !== String(id);
+      return mesmoCodigo && outroId;
+    });
 
-  if (id) {
-    // Atualização de produto existente
-    const prodExistente = App.produtos.find(x => x.id === Number(id));
-    if (prodExistente) {
-      prodExistente.codigo = codigo;
-      prodExistente.nome = nome;
-      prodExistente.categoria = categoria;
-      prodExistente.unidade = unidade;
-      prodExistente.valorUnitario = valorUnitario;
-      prodExistente.estoqueMinimo = estoqueMinimo;
-      prodExistente.localizacao = localizacao;
-      prodExistente.descricao = descricao;
-      prodExistente.foto = App.tempPhotoBase64;
-      prodExistente.dataAtualizacao = new Date().toISOString();
+    if (prodComMesmoCodigo) {
+      App.mostrarToast(`Não é permitido cadastrar produtos com o mesmo código! O código "${codigo}" já pertence ao produto "${prodComMesmoCodigo.nome}".`, 'danger');
+      if (inputCod) {
+        inputCod.focus();
+        inputCod.style.borderColor = '#f43f5e';
+      }
+      const feedback = document.getElementById('prod-codigo-feedback');
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.color = '#f43f5e';
+        feedback.innerText = `⚠️ CÓDIGO JÁ EM USO: cadastrado para "${prodComMesmoCodigo.nome}".`;
+      }
+      return;
+    }
 
-      // Se mudou o estoque diretamente pelo formulário de edição
-      if (estoqueInicial !== prodExistente.estoqueAtual) {
-        const diff = estoqueInicial - prodExistente.estoqueAtual;
-        const tipoAjuste = diff > 0 ? 'ENTRADA' : 'SAIDA';
-        
+    // 3. Validação do Nome do Produto
+    if (!nome) {
+      App.mostrarToast('Por favor, informe a descrição/nome do produto.', 'warning');
+      document.getElementById('prod-nome').focus();
+      return;
+    }
+
+    if (id) {
+      // Atualização de produto existente
+      const prodExistente = produtosNoBanco.find(x => String(x.id) === String(id));
+      if (prodExistente) {
+        prodExistente.codigo = codigo; // Sempre em CAIXA ALTA
+        prodExistente.nome = nome;
+        prodExistente.categoria = categoria;
+        prodExistente.unidade = unidade;
+        prodExistente.valorUnitario = valorUnitario;
+        prodExistente.estoqueMinimo = estoqueMinimo;
+        prodExistente.localizacao = localizacao;
+        prodExistente.descricao = descricao;
+        prodExistente.foto = App.tempPhotoBase64;
+        prodExistente.dataAtualizacao = new Date().toISOString();
+
+        // Se mudou o estoque diretamente pelo formulário de edição
+        if (estoqueInicial !== prodExistente.estoqueAtual) {
+          const diff = estoqueInicial - prodExistente.estoqueAtual;
+          const tipoAjuste = diff > 0 ? 'ENTRADA' : 'SAIDA';
+          
+          await window.db.add('movimentacoes', {
+            tipo: tipoAjuste,
+            subtipo: 'AJUSTE_INVENTARIO',
+            produtoId: prodExistente.id,
+            produtoCodigo: prodExistente.codigo,
+            produtoNome: prodExistente.nome,
+            produtoUnidade: prodExistente.unidade,
+            quantidade: Math.abs(diff),
+            valorUnitario: prodExistente.valorUnitario,
+            valorTotal: Math.abs(diff) * prodExistente.valorUnitario,
+            estoqueAnterior: prodExistente.estoqueAtual,
+            estoqueNovo: estoqueInicial,
+            dataHora: new Date().toISOString(),
+            unidadeDestino: 'ALMOXARIFADO CENTRAL',
+            responsavel: 'ALMOXARIFADO',
+            motivo: 'Ajuste manual de inventário na edição do produto',
+            observacoes: `Saldo alterado de ${prodExistente.estoqueAtual} para ${estoqueInicial}`
+          });
+
+          prodExistente.estoqueAtual = estoqueInicial;
+        }
+
+        await window.db.update('produtos', prodExistente);
+        App.mostrarToast(`Produto "${nome}" atualizado com sucesso!`, 'success');
+      }
+    } else {
+      // Novo Produto
+      const novoProduto = {
+        codigo, // Sempre em CAIXA ALTA
+        nome,
+        categoria,
+        unidade,
+        valorUnitario,
+        estoqueInicial,
+        estoqueAtual: estoqueInicial,
+        estoqueMinimo,
+        localizacao,
+        descricao,
+        foto: App.tempPhotoBase64,
+        dataCadastro: new Date().toISOString()
+      };
+
+      const newId = await window.db.add('produtos', novoProduto);
+      novoProduto.id = newId;
+
+      // Registra movimentação de Estoque Inicial caso > 0
+      if (estoqueInicial > 0) {
         await window.db.add('movimentacoes', {
-          tipo: tipoAjuste,
-          subtipo: 'AJUSTE_INVENTARIO',
-          produtoId: prodExistente.id,
-          produtoCodigo: prodExistente.codigo,
-          produtoNome: prodExistente.nome,
-          produtoUnidade: prodExistente.unidade,
-          quantidade: Math.abs(diff),
-          valorUnitario: prodExistente.valorUnitario,
-          valorTotal: Math.abs(diff) * prodExistente.valorUnitario,
-          estoqueAnterior: prodExistente.estoqueAtual,
+          tipo: 'ENTRADA',
+          subtipo: 'ESTOQUE_INICIAL',
+          produtoId: newId,
+          produtoCodigo: novoProduto.codigo,
+          produtoNome: novoProduto.nome,
+          produtoUnidade: novoProduto.unidade,
+          quantidade: estoqueInicial,
+          valorUnitario,
+          valorTotal: estoqueInicial * valorUnitario,
+          estoqueAnterior: 0,
           estoqueNovo: estoqueInicial,
           dataHora: new Date().toISOString(),
           unidadeDestino: 'ALMOXARIFADO CENTRAL',
           responsavel: 'ALMOXARIFADO',
-          motivo: 'Ajuste manual de inventário na edição do produto',
-          observacoes: `Saldo alterado de ${prodExistente.estoqueAtual} para ${estoqueInicial}`
+          motivo: 'Cadastro de Estoque Inicial',
+          observacoes: 'Registro inicial de implantação do produto'
         });
-
-        prodExistente.estoqueAtual = estoqueInicial;
       }
 
-      try {
-        await window.db.update('produtos', prodExistente);
-        App.mostrarToast('Produto atualizado com sucesso!', 'success');
-      } catch (err) {
-        App.mostrarToast(err.message, 'danger');
-        return;
-      }
-    }
-  } else {
-    // Novo Produto
-    const novoProduto = {
-      codigo,
-      nome,
-      categoria,
-      unidade,
-      valorUnitario,
-      estoqueInicial,
-      estoqueAtual: estoqueInicial,
-      estoqueMinimo,
-      localizacao,
-      descricao,
-      foto: App.tempPhotoBase64,
-      dataCadastro: new Date().toISOString()
-    };
-
-    try {
-      const newId = await window.db.add('produtos', novoProduto);
-      novoProduto.id = newId;
-    } catch (err) {
-      App.mostrarToast(err.message, 'danger');
-      return;
+      App.mostrarToast(`Produto "${nome}" (${codigo}) cadastrado com sucesso!`, 'success');
     }
 
-    // Registra movimentação de Estoque Inicial caso > 0
-    if (estoqueInicial > 0) {
-      await window.db.add('movimentacoes', {
-        tipo: 'ENTRADA',
-        subtipo: 'ESTOQUE_INICIAL',
-        produtoId: newId,
-        produtoCodigo: novoProduto.codigo,
-        produtoNome: novoProduto.nome,
-        produtoUnidade: novoProduto.unidade,
-        quantidade: estoqueInicial,
-        valorUnitario,
-        valorTotal: estoqueInicial * valorUnitario,
-        estoqueAnterior: 0,
-        estoqueNovo: estoqueInicial,
-        dataHora: new Date().toISOString(),
-        unidadeDestino: 'ALMOXARIFADO CENTRAL',
-        responsavel: 'ALMOXARIFADO',
-        motivo: 'Cadastro de Estoque Inicial',
-        observacoes: 'Registro inicial de implantação do produto'
-      });
-    }
+    App.notificarSalvamento();
+    App.fecharModal('modal-produto');
+    await App.carregarDados();
+    App.renderizarTudo();
 
-    App.mostrarToast(`Produto "${nome}" cadastrado com sucesso!`, 'success');
+  } catch (err) {
+    console.error('Erro ao salvar produto:', err);
+    App.mostrarToast(err.message || 'Erro ao salvar o produto.', 'danger');
+  } finally {
+    App.salvandoProduto = false;
+    if (btnSalvar) {
+      btnSalvar.disabled = false;
+      btnSalvar.innerText = txtOriginalBtn;
+    }
   }
-
-  App.notificarSalvamento();
-  App.fecharModal('modal-produto');
-  await App.carregarDados();
-  App.renderizarTudo();
 };
 
 App.confirmarExclusaoProduto = async (id) => {
