@@ -113,25 +113,7 @@ class EstoqueDatabase {
     if (prods.length === 0) {
       const produtosIniciais = this.obterProdutosDemonstracao();
       for (const p of produtosIniciais) {
-        const id = await this.add('produtos', p);
-        await this.add('movimentacoes', {
-          tipo: 'ENTRADA',
-          subtipo: 'ESTOQUE_INICIAL',
-          produtoId: id,
-          produtoCodigo: p.codigo,
-          produtoNome: p.nome,
-          produtoUnidade: p.unidade,
-          quantidade: p.estoqueInicial,
-          valorUnitario: p.valorUnitario,
-          valorTotal: p.estoqueInicial * p.valorUnitario,
-          estoqueAnterior: 0,
-          estoqueNovo: p.estoqueInicial,
-          dataHora: new Date().toISOString(),
-          unidadeDestino: 'ALMOXARIFADO CENTRAL',
-          responsavel: 'SISTEMA',
-          motivo: 'Inventário Inicial de Estoque',
-          observacoes: 'Lançamento automático de saldo inicial de implantação'
-        });
+        await this.add('produtos', p);
       }
     }
   }
@@ -158,26 +140,9 @@ class EstoqueDatabase {
       }));
       localStorage.setItem('santos_produtos', JSON.stringify(prods));
 
-      const movs = prods.map((p, idx) => ({
-        id: idx + 1,
-        tipo: 'ENTRADA',
-        subtipo: 'ESTOQUE_INICIAL',
-        produtoId: p.id,
-        produtoCodigo: p.codigo,
-        produtoNome: p.nome,
-        produtoUnidade: p.unidade,
-        quantidade: p.estoqueInicial,
-        valorUnitario: p.valorUnitario,
-        valorTotal: p.estoqueInicial * p.valorUnitario,
-        estoqueAnterior: 0,
-        estoqueNovo: p.estoqueInicial,
-        dataHora: new Date().toISOString(),
-        unidadeDestino: 'ALMOXARIFADO CENTRAL',
-        responsavel: 'SISTEMA',
-        motivo: 'Inventário Inicial de Estoque',
-        observacoes: 'Lançamento automático de saldo inicial de implantação'
-      }));
-      localStorage.setItem('santos_movimentacoes', JSON.stringify(movs));
+      if (!localStorage.getItem('santos_movimentacoes')) {
+        localStorage.setItem('santos_movimentacoes', JSON.stringify([]));
+      }
     }
   }
 
@@ -189,8 +154,8 @@ class EstoqueDatabase {
         categoria: 'EPI',
         unidade: 'PAR',
         valorUnitario: 32.50,
-        estoqueInicial: 80,
-        estoqueAtual: 80,
+        estoqueInicial: 0,
+        estoqueAtual: 0,
         estoqueMinimo: 20,
         localizacao: 'Prateleira A1',
         descricao: 'Luva para serviços pesados de via e manutenção mecânica.',
@@ -203,8 +168,8 @@ class EstoqueDatabase {
         categoria: 'EPI',
         unidade: 'UN',
         valorUnitario: 14.80,
-        estoqueInicial: 120,
-        estoqueAtual: 120,
+        estoqueInicial: 0,
+        estoqueAtual: 0,
         estoqueMinimo: 30,
         localizacao: 'Prateleira A2',
         descricao: 'Proteção ocular contra radiação solar e partículas volantes.',
@@ -217,8 +182,8 @@ class EstoqueDatabase {
         categoria: 'Consumíveis',
         unidade: 'UN',
         valorUnitario: 8.90,
-        estoqueInicial: 150,
-        estoqueAtual: 150,
+        estoqueInicial: 0,
+        estoqueAtual: 0,
         estoqueMinimo: 40,
         localizacao: 'Gaveta B3',
         descricao: 'Disco de corte abrasivo para esmerilhadeira.',
@@ -231,8 +196,8 @@ class EstoqueDatabase {
         categoria: 'Lubrificantes',
         unidade: 'UN',
         valorUnitario: 28.90,
-        estoqueInicial: 35,
-        estoqueAtual: 35,
+        estoqueInicial: 0,
+        estoqueAtual: 0,
         estoqueMinimo: 10,
         localizacao: 'Armário Químico',
         descricao: 'Anticorrosivo, lubrificante e desengripante profissional.',
@@ -245,8 +210,8 @@ class EstoqueDatabase {
         categoria: 'Ferramentas',
         unidade: 'UN',
         valorUnitario: 45.00,
-        estoqueInicial: 15,
-        estoqueAtual: 15,
+        estoqueInicial: 0,
+        estoqueAtual: 0,
         estoqueMinimo: 5,
         localizacao: 'Painel 2',
         descricao: 'Aço cromo vanádio fosfatizado.',
@@ -259,8 +224,8 @@ class EstoqueDatabase {
         categoria: 'Consumíveis',
         unidade: 'KG',
         valorUnitario: 26.00,
-        estoqueInicial: 60,
-        estoqueAtual: 60,
+        estoqueInicial: 0,
+        estoqueAtual: 0,
         estoqueMinimo: 20,
         localizacao: 'Estufa de Eletrodos',
         descricao: 'Eletrodo básico para soldagem de aços de alta resistência em ferrovias.',

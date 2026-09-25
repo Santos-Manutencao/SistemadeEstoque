@@ -214,6 +214,15 @@ App.carregarDados = async () => {
   App.movimentacoes = await window.db.getAll('movimentacoes');
   App.colaboradores = await window.db.getAll('colaboradores');
   
+  // Limpeza solicitada: Remover todas as entradas já lançadas (executado de forma automática e segura)
+  if (!localStorage.getItem('santos_limpeza_entradas_v2')) {
+    const temEntradas = App.movimentacoes.some(m => m.tipo === 'ENTRADA');
+    if (temEntradas) {
+      await App.removerTodasEntradas(true);
+    }
+    localStorage.setItem('santos_limpeza_entradas_v2', 'true');
+  }
+
   // Ordena movimentações por data decrescente
   App.movimentacoes.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
 };
@@ -1031,6 +1040,116 @@ App.salvarSaida = async (e) => {
 };
 
 /* ==========================================================================
+   EXCLUSÃO E LIMPEZA DE MOVIMENTAÇÕES
+   ========================================================================== */
+// Remove todas as entradas já lançadas no sistema
+App.removerTodasEntradas = async (silencioso = false) => {
+  if (!silencioso) {
+    const confirmar = confirm(
+      'Atenção: Deseja realmente remover TODAS as entradas já lançadas no sistema?\n\n' +
+      '• Todas as movimentações do tipo ENTRADA (inclusive saldo inicial) serão excluídas;\n' +
+      '• Os saldos em estoque de todos os produtos serão recalculados;\n' +
+      '• Todas as alterações serão salvas automaticamente.'
+    );
+    if (!confirmar) return;
+  }
+
+  try {
+    const todasMovs = await window.db.getAll('movimentacoes');
+    const entradas = todasMovs.filter(m => m.tipo === 'ENTRADA');
+
+    if (entradas.length === 0 && !silencioso) {
+      App.mostrarToast('Nenhuma movimentação de entrada encontrada para remover.', 'info');
+      return;
+    }
+
+    // 1. Remove cada movimentação de ENTRADA do banco de dados
+    for (const ent of entradas) {
+      await window.db.delete('movimentacoes', ent.id);
+    }
+
+    // 2. Movimentações que permanecem (ex: saídas)
+    const movsRestantes = todasMovs.filter(m => m.tipo !== 'ENTRADA');
+
+    // 3. Atualiza produtos: zera estoqueInicial e recalcula estoqueAtual
+    const prods = await window.db.getAll('produtos');
+    for (const p of prods) {
+      const entradasProd = movsRestantes.filter(m => m.tipo === 'ENTRADA' && (m.produtoId === p.id || m.produtoCodigo === p.codigo));
+      const totalEntradas = entradasProd.reduce((acc, m) => acc + (Number(m.quantidade) || 0), 0);
+
+      const saidasProd = movsRestantes.filter(m => m.tipo === 'SAIDA' && (m.produtoId === p.id || m.produtoCodigo === p.codigo));
+      const totalSaidas = saidasProd.reduce((acc, m) => acc + (Number(m.quantidade) || 0), 0);
+
+      p.estoqueInicial = 0;
+      p.estoqueAtual = Math.max(0, totalEntradas - totalSaidas);
+      p.dataAtualizacao = new Date().toISOString();
+      await window.db.update('produtos', p);
+    }
+
+    // 4. Sincroniza estado em memória
+    App.movimentacoes = movsRestantes;
+    App.movimentacoes.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+    App.produtos = prods;
+
+    // 5. Atualiza interface e notifica salvamento
+    App.renderizarTudo();
+    App.notificarSalvamento();
+
+    if (!silencioso) {
+      App.mostrarToast(`Todas as ${entradas.length} entradas lançadas foram removidas com sucesso!`, 'success');
+    }
+  } catch (err) {
+    console.error('Erro ao remover todas as entradas:', err);
+    if (!silencioso) {
+      App.mostrarToast('Erro ao remover as entradas.', 'danger');
+    }
+  }
+};
+
+// Exclui uma movimentação individual (seja entrada ou saída) com estorno de estoque
+App.excluirMovimentacao = async (movId) => {
+  const mov = App.movimentacoes.find(m => m.id === movId);
+  if (!mov) {
+    App.mostrarToast('Movimentação não encontrada.', 'danger');
+    return;
+  }
+
+  const isEntrada = mov.tipo === 'ENTRADA';
+  const desc = isEntrada
+    ? `a ENTRADA de ${mov.quantidade} ${mov.produtoUnidade || 'UN'} do produto "${mov.produtoNome}"`
+    : `a RETIRADA de ${mov.quantidade} ${mov.produtoUnidade || 'UN'} para "${mov.nomeFuncionario || 'colaborador'}"`;
+
+  if (!confirm(`Deseja realmente excluir ${desc}?\n\nO saldo do produto será estornado e recalculado automaticamente.`)) {
+    return;
+  }
+
+  try {
+    const prod = App.produtos.find(p => p.id === mov.produtoId || p.codigo === mov.produtoCodigo);
+    if (prod) {
+      if (isEntrada) {
+        // Estorno de entrada: deduz do estoque atual
+        prod.estoqueAtual = Math.max(0, (Number(prod.estoqueAtual) || 0) - Number(mov.quantidade));
+      } else {
+        // Estorno de saída: devolve ao estoque atual
+        prod.estoqueAtual = (Number(prod.estoqueAtual) || 0) + Number(mov.quantidade);
+      }
+      prod.dataAtualizacao = new Date().toISOString();
+      await window.db.update('produtos', prod);
+    }
+
+    await window.db.delete('movimentacoes', mov.id);
+
+    App.movimentacoes = App.movimentacoes.filter(m => m.id !== movId);
+    App.renderizarTudo();
+    App.notificarSalvamento();
+    App.mostrarToast('Movimentação excluída e saldo atualizado com sucesso!', 'success');
+  } catch (err) {
+    console.error('Erro ao excluir movimentação:', err);
+    App.mostrarToast('Erro ao excluir movimentação.', 'danger');
+  }
+};
+
+/* ==========================================================================
    HISTÓRICO DE MOVIMENTAÇÕES
    ========================================================================== */
 App.renderizarMovimentacoes = () => {
@@ -1086,9 +1205,9 @@ App.renderizarMovimentacoes = () => {
         <td style="font-weight: 700; color: ${corQtd};">${sinal}${m.quantidade} ${m.produtoUnidade || 'UN'}</td>
         <td style="font-weight: 600;">${App.formatarMoeda(m.valorTotal)}</td>
         <td>${colabHtml}</td>
-        <td><span class="badge badge-unit">${m.unidadeDestino || 'GERAL'}</span></td>
-        <td style="text-align: right;">
+        <td style="text-align: right; white-space: nowrap;">
           ${!isEntrada ? `<button class="btn btn-outline btn-sm" onclick="App.imprimirCautela(${m.id})" title="Imprimir Comprovante">📄 Cautela</button>` : ''}
+          <button class="btn btn-outline-danger btn-sm" onclick="App.excluirMovimentacao(${m.id})" title="Excluir Lançamento">🗑️ Excluir</button>
         </td>
       </tr>
     `;

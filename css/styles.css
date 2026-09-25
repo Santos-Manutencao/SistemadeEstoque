@@ -324,6 +324,16 @@ body {
   border-color: var(--text-muted);
 }
 
+.btn-outline-danger {
+  background-color: transparent;
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #f43f5e;
+}
+.btn-outline-danger:hover {
+  background-color: rgba(244, 63, 94, 0.12);
+  border-color: #f43f5e;
+}
+
 .btn-sm {
   padding: 0.4rem 0.75rem;
   font-size: 0.8rem;
