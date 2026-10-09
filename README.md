@@ -22,9 +22,12 @@ O sistema está publicado e acessível de forma 100% online, sem necessidade de 
 
 ---
 
-## 💾 Salvamento Automático
-- **Todas as alterações são salvas automaticamente**: cada novo produto cadastrado, edição, exclusão, entrada de mercadoria ou retirada para colaborador é gravada instantaneamente no navegador (via IndexedDB e LocalStorage).
-- Não é necessário clicar em botões adicionais de salvar sistema: o indicador **"Salvo automaticamente"** no cabeçalho confirma a gravação contínua dos dados.
+## 💾 Salvamento Automático & Sincronização em Nuvem (Multi-Dispositivos)
+- **Salvamento Automático Local:** Cada novo produto cadastrado, edição, exclusão, entrada ou retirada é gravada instantaneamente no navegador (via IndexedDB e LocalStorage).
+- **Sincronização em Nuvem via GitHub:**
+  - O sistema sincroniza todos os cadastros e movimentações entre **diferentes computadores e celulares** utilizando o próprio repositório GitHub através do arquivo `dados_sistema.json`.
+  - **Como conectar:** Clique no botão `Nuvem: Conectar GitHub` no topo da tela ou na aba *Configurações*, insira o seu Personal Access Token do GitHub e clique em *Enviar Dados para a Nuvem*.
+  - Qualquer computador que acessar o link baixará automaticamente os dados mais recentes gravados na nuvem.
 
 ---
 
