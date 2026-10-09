@@ -171,7 +171,7 @@ App.salvarNovaSenha = (event) => {
 
 App.notificarSalvamento = () => {
   const statusText = document.getElementById('sync-status-text');
-  const dot = document.querySelector('.sync-dot');
+  const dot = document.querySelector('#sync-status .sync-dot');
 
   if (statusText) statusText.innerText = 'Salvando alterações...';
   if (dot) dot.style.backgroundColor = '#38bdf8';
@@ -180,6 +180,11 @@ App.notificarSalvamento = () => {
     if (statusText) statusText.innerText = 'Salvo automaticamente';
     if (dot) dot.style.backgroundColor = '#10b981';
   }, 500);
+
+  // Se o GitHub estiver conectado, agenda envio automático em segundo plano
+  if (window.GitHubSync && window.GitHubSync.estaConectado()) {
+    window.GitHubSync.agendarEnvioAutomatico();
+  }
 };
 
 // Inicialização
@@ -196,6 +201,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     App.renderizarTudo();
     if (App.usuarioLogado) {
       App.mostrarToast('Sistema Santos Manutenções carregado com sucesso!', 'success');
+    }
+
+    // 3. Inicializa sincronização em nuvem via GitHub
+    if (window.GitHubSync) {
+      window.GitHubSync.atualizarIndicadorUI();
+      // Sincroniza em segundo plano (baixa dados mais recentes da nuvem se existirem)
+      window.GitHubSync.sincronizar(false);
     }
   } catch (err) {
     console.error('Erro ao inicializar banco de dados:', err);
