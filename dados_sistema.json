@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T17:08:45.954Z",
+  "ultimaAtualizacao": "2026-10-15T17:11:32.026Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -58,14 +58,14 @@
       "unidade": "PAR",
       "valorUnitario": 15.99,
       "estoqueInicial": 80,
-      "estoqueAtual": 60,
+      "estoqueAtual": 80,
       "estoqueMinimo": 20,
       "localizacao": "",
       "descricao": "CA: 12230",
       "foto": "",
       "dataCadastro": "2026-10-08T18:08:01.077Z",
       "id": 12,
-      "dataAtualizacao": "2026-10-15T17:08:40.187Z"
+      "dataAtualizacao": "2026-10-15T17:11:26.354Z"
     },
     {
       "codigo": "EPI-005",
@@ -1161,27 +1161,6 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 42
-    },
-    {
-      "tipo": "SAIDA",
-      "subtipo": "RETIRADA_COLABORADOR",
-      "produtoId": 12,
-      "produtoCodigo": "EPI-004",
-      "produtoNome": "LUVA DE SEGURANÇA VAQUETA",
-      "produtoUnidade": "PAR",
-      "quantidade": 20,
-      "valorUnitario": 0,
-      "valorTotal": 0,
-      "estoqueAnterior": 80,
-      "estoqueNovo": 60,
-      "dataHora": "2026-10-14T13:32",
-      "matriculaFuncionario": "500",
-      "nomeFuncionario": "CDA ADM",
-      "cargoFuncionario": "GERENTE",
-      "unidadeDestino": "CDA",
-      "motivo": "Retirada de Material para Operação / Manutenção",
-      "responsavel": "Almoxarifado Central",
-      "id": 43
     },
     {
       "tipo": "SAIDA",
