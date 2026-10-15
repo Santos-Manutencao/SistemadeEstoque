@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:37:37.523Z",
+  "ultimaAtualizacao": "2026-10-15T13:37:48.173Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -481,7 +481,7 @@
       "dataAtualizacao": "2026-10-15T13:35:22.955Z"
     },
     {
-      "codigo": "EPI0-032",
+      "codigo": "EPI-032",
       "nome": "CAPACETE MSA BRANCO",
       "categoria": "EPI",
       "unidade": "UN",
@@ -493,7 +493,8 @@
       "descricao": "CA: 498",
       "foto": "",
       "dataCadastro": "2026-10-08T19:25:54.993Z",
-      "id": 40
+      "id": 40,
+      "dataAtualizacao": "2026-10-15T13:37:43.695Z"
     },
     {
       "codigo": "EPI-033",
