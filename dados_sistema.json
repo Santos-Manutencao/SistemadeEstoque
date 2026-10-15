@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:36:47.274Z",
+  "ultimaAtualizacao": "2026-10-15T13:37:37.523Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -496,7 +496,7 @@
       "id": 40
     },
     {
-      "codigo": "E-033PI",
+      "codigo": "EPI-033",
       "nome": "CAPACETE CINZA",
       "categoria": "EPI",
       "unidade": "UN",
@@ -509,7 +509,7 @@
       "foto": "",
       "dataCadastro": "2026-10-08T19:28:13.403Z",
       "id": 41,
-      "dataAtualizacao": "2026-10-15T13:36:42.703Z"
+      "dataAtualizacao": "2026-10-15T13:37:32.879Z"
     }
   ],
   "movimentacoes": [
