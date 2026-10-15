@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:35:27.411Z",
+  "ultimaAtualizacao": "2026-10-15T13:36:13.984Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -502,13 +502,14 @@
       "unidade": "UN",
       "valorUnitario": 44.9,
       "estoqueInicial": 20,
-      "estoqueAtual": 20,
+      "estoqueAtual": 16,
       "estoqueMinimo": 5,
       "localizacao": "",
       "descricao": "CA: 12354",
       "foto": "",
       "dataCadastro": "2026-10-08T19:28:13.403Z",
-      "id": 41
+      "id": 41,
+      "dataAtualizacao": "2026-10-15T13:36:02.603Z"
     }
   ],
   "movimentacoes": [
@@ -1220,6 +1221,27 @@
       "responsavel": "Almoxarifado Santos",
       "motivo": "Entrada / Reposição de Estoque",
       "id": 45
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "produtoId": 41,
+      "produtoCodigo": "E-033PI",
+      "produtoNome": "CAPACETE CINZA",
+      "produtoUnidade": "UN",
+      "quantidade": 4,
+      "valorUnitario": 44.9,
+      "valorTotal": 179.6,
+      "estoqueAnterior": 20,
+      "estoqueNovo": 16,
+      "dataHora": "2026-10-14T13:35",
+      "matriculaFuncionario": "500",
+      "nomeFuncionario": "CDA ADM",
+      "cargoFuncionario": "GERENTE",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 46
     }
   ],
   "colaboradores": [
