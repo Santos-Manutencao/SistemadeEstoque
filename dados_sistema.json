@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-09T18:52:34.758Z",
+  "ultimaAtualizacao": "2026-10-15T13:32:00.658Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -1927,6 +1927,16 @@
       "ativo": true,
       "dataCadastro": "2026-09-25T17:53:20.801Z",
       "id": 79
+    },
+    {
+      "matricula": "500",
+      "nome": "CDA ADM",
+      "cpf": "",
+      "cargo": "GERENTE",
+      "local": "CDA",
+      "ativo": true,
+      "dataCadastro": "2026-10-15T13:31:55.958Z",
+      "id": 80
     }
   ]
 }
