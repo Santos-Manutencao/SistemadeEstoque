@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:41:19.647Z",
+  "ultimaAtualizacao": "2026-10-15T17:08:45.954Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -56,7 +56,7 @@
       "nome": "LUVA DE SEGURANÇA VAQUETA",
       "categoria": "EPI",
       "unidade": "PAR",
-      "valorUnitario": 0,
+      "valorUnitario": 15.99,
       "estoqueInicial": 80,
       "estoqueAtual": 60,
       "estoqueMinimo": 20,
@@ -65,7 +65,7 @@
       "foto": "",
       "dataCadastro": "2026-10-08T18:08:01.077Z",
       "id": 12,
-      "dataAtualizacao": "2026-10-15T13:33:03.239Z"
+      "dataAtualizacao": "2026-10-15T17:08:40.187Z"
     },
     {
       "codigo": "EPI-005",
