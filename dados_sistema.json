@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T17:12:01.421Z",
+  "ultimaAtualizacao": "2026-10-15T17:36:25.631Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -150,14 +150,14 @@
       "unidade": "PAR",
       "valorUnitario": 9.99,
       "estoqueInicial": 31,
-      "estoqueAtual": 31,
+      "estoqueAtual": 30,
       "estoqueMinimo": 20,
       "localizacao": "",
       "descricao": "CA: 42252",
       "foto": "",
       "dataCadastro": "2026-10-08T18:34:38.876Z",
       "id": 18,
-      "dataAtualizacao": "2026-10-08T18:51:23.759Z"
+      "dataAtualizacao": "2026-10-15T17:36:19.844Z"
     },
     {
       "codigo": "EPI-011",
@@ -1266,6 +1266,27 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 49
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "produtoId": 18,
+      "produtoCodigo": "EPI-010",
+      "produtoNome": "LUVA DE SEGURANÇA GLADIADOR",
+      "produtoUnidade": "PAR",
+      "quantidade": 1,
+      "valorUnitario": 9.99,
+      "valorTotal": 9.99,
+      "estoqueAnterior": 31,
+      "estoqueNovo": 30,
+      "dataHora": "2026-10-15T17:35",
+      "matriculaFuncionario": "97",
+      "nomeFuncionario": "JONES DE OLIVEIRA SILVA",
+      "cargoFuncionario": "MANTENEDOR",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 50
     }
   ],
   "colaboradores": [
