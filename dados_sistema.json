@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:32:00.658Z",
+  "ultimaAtualizacao": "2026-10-15T13:32:36.188Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -11,14 +11,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 38,
-      "estoqueAtual": 38,
+      "estoqueAtual": 26,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:35:38.276Z",
       "id": 9,
-      "dataAtualizacao": "2026-10-08T18:22:25.108Z"
+      "dataAtualizacao": "2026-10-15T13:32:29.059Z"
     },
     {
       "codigo": "EPI-002",
@@ -1135,6 +1135,27 @@
       "motivo": "Cadastro de Estoque Inicial",
       "observacoes": "Registro inicial de implantação do produto",
       "id": 41
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "produtoId": 9,
+      "produtoCodigo": "EPI-001",
+      "produtoNome": "ÓCULOS DE SEGURANÇA INCOLOR",
+      "produtoUnidade": "UN",
+      "quantidade": 12,
+      "valorUnitario": 5.9,
+      "valorTotal": 70.80000000000001,
+      "estoqueAnterior": 38,
+      "estoqueNovo": 26,
+      "dataHora": "2026-10-14T13:31",
+      "matriculaFuncionario": "500",
+      "nomeFuncionario": "CDA ADM",
+      "cargoFuncionario": "GERENTE",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 42
     }
   ],
   "colaboradores": [
