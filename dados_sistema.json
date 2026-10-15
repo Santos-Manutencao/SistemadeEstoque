@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T17:36:25.631Z",
+  "ultimaAtualizacao": "2026-10-15T17:38:34.552Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -58,14 +58,14 @@
       "unidade": "PAR",
       "valorUnitario": 15.99,
       "estoqueInicial": 80,
-      "estoqueAtual": 60,
+      "estoqueAtual": 59,
       "estoqueMinimo": 20,
       "localizacao": "",
       "descricao": "CA: 12230",
       "foto": "",
       "dataCadastro": "2026-10-08T18:08:01.077Z",
       "id": 12,
-      "dataAtualizacao": "2026-10-15T17:11:56.606Z"
+      "dataAtualizacao": "2026-10-15T17:37:51.665Z"
     },
     {
       "codigo": "EPI-005",
@@ -1287,6 +1287,27 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 50
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "produtoId": 12,
+      "produtoCodigo": "EPI-004",
+      "produtoNome": "LUVA DE SEGURANÇA VAQUETA",
+      "produtoUnidade": "PAR",
+      "quantidade": 1,
+      "valorUnitario": 15.99,
+      "valorTotal": 15.99,
+      "estoqueAnterior": 60,
+      "estoqueNovo": 59,
+      "dataHora": "2026-10-15T17:36",
+      "matriculaFuncionario": "58",
+      "nomeFuncionario": "JOSE MARIA DOS SANTOS",
+      "cargoFuncionario": "SERVIÇOS GERAIS",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 51
     }
   ],
   "colaboradores": [
