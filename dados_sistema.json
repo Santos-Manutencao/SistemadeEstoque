@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:33:07.730Z",
+  "ultimaAtualizacao": "2026-10-15T13:33:41.369Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -134,13 +134,14 @@
       "unidade": "PAR",
       "valorUnitario": 79.99,
       "estoqueInicial": 25,
-      "estoqueAtual": 25,
+      "estoqueAtual": 15,
       "estoqueMinimo": 5,
       "localizacao": "",
       "descricao": "CA: 51179",
       "foto": "",
       "dataCadastro": "2026-10-08T18:30:54.685Z",
-      "id": 17
+      "id": 17,
+      "dataAtualizacao": "2026-10-15T13:33:36.701Z"
     },
     {
       "codigo": "EPI-010",
@@ -1178,6 +1179,27 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 43
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "produtoId": 17,
+      "produtoCodigo": "EPI-009",
+      "produtoNome": "PROTETOR AURICULAR TIPO CONCHA",
+      "produtoUnidade": "PAR",
+      "quantidade": 10,
+      "valorUnitario": 79.99,
+      "valorTotal": 799.9,
+      "estoqueAnterior": 25,
+      "estoqueNovo": 15,
+      "dataHora": "2026-10-14T13:33",
+      "matriculaFuncionario": "500",
+      "nomeFuncionario": "CDA ADM",
+      "cargoFuncionario": "GERENTE",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 44
     }
   ],
   "colaboradores": [
