@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:40:43.797Z",
+  "ultimaAtualizacao": "2026-10-15T13:41:19.647Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -471,14 +471,14 @@
       "unidade": "UN",
       "valorUnitario": 23.9,
       "estoqueInicial": 50,
-      "estoqueAtual": 50,
+      "estoqueAtual": 35,
       "estoqueMinimo": 10,
       "localizacao": "",
       "descricao": "",
       "foto": "",
       "dataCadastro": "2026-10-08T19:21:51.642Z",
       "id": 39,
-      "dataAtualizacao": "2026-10-15T13:40:38.961Z"
+      "dataAtualizacao": "2026-10-15T13:41:15.012Z"
     },
     {
       "codigo": "EPI-032",
@@ -1245,6 +1245,27 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 47
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "produtoId": 39,
+      "produtoCodigo": "EPI-031",
+      "produtoNome": "CARNEIRA ULTRA MASTER",
+      "produtoUnidade": "UN",
+      "quantidade": 15,
+      "valorUnitario": 23.9,
+      "valorTotal": 358.5,
+      "estoqueAnterior": 50,
+      "estoqueNovo": 35,
+      "dataHora": "2026-10-14T13:40",
+      "matriculaFuncionario": "500",
+      "nomeFuncionario": "CDA ADM",
+      "cargoFuncionario": "GERENTE",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 48
     }
   ],
   "colaboradores": [
