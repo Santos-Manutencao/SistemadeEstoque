@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T13:33:41.369Z",
+  "ultimaAtualizacao": "2026-10-15T13:35:27.411Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -471,13 +471,14 @@
       "unidade": "UN",
       "valorUnitario": 23.9,
       "estoqueInicial": 50,
-      "estoqueAtual": 50,
+      "estoqueAtual": 65,
       "estoqueMinimo": 10,
       "localizacao": "",
       "descricao": "",
       "foto": "",
       "dataCadastro": "2026-10-08T19:21:51.642Z",
-      "id": 39
+      "id": 39,
+      "dataAtualizacao": "2026-10-15T13:35:22.955Z"
     },
     {
       "codigo": "EPI0-032",
@@ -1200,6 +1201,25 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 44
+    },
+    {
+      "tipo": "ENTRADA",
+      "subtipo": "COMPRA_REPOSICAO",
+      "produtoId": 39,
+      "produtoCodigo": "EPI-031",
+      "produtoNome": "CARNEIRA ULTRA MASTER",
+      "produtoUnidade": "UN",
+      "quantidade": 15,
+      "valorUnitario": 23.9,
+      "valorTotal": 358.5,
+      "estoqueAnterior": 50,
+      "estoqueNovo": 65,
+      "dataHora": "2026-10-14T13:33",
+      "unidadeDestino": "ALMOXARIFADO CENTRAL",
+      "fornecedorOuNF": "",
+      "responsavel": "Almoxarifado Santos",
+      "motivo": "Entrada / Reposição de Estoque",
+      "id": 45
     }
   ],
   "colaboradores": [
