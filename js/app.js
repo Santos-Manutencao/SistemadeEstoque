@@ -1059,41 +1059,180 @@ App.salvarEntrada = async (e) => {
 };
 
 /* RETIRADA / SAÍDA */
+App.itensRetirada = [];
+
 App.abrirModalSaida = () => {
   document.getElementById('form-saida').reset();
   document.getElementById('saida-data').value = new Date().toISOString().slice(0, 16);
   App.selectedEmployeeForExit = null;
   document.getElementById('saida-emp-info').style.display = 'none';
   document.getElementById('saida-unidade').value = '';
+  App.itensRetirada = [];
+  App.renderizarItensRetirada();
   App.atualizarInfoProdutoSaida();
   App.abrirModal('modal-saida');
 };
 
 App.abrirModalSaidaComProduto = (prodId) => {
   App.abrirModalSaida();
-  document.getElementById('saida-produto').value = prodId;
+  const select = document.getElementById('saida-produto');
+  if (select) {
+    select.value = prodId;
+  }
   App.atualizarInfoProdutoSaida();
+  const inputQtd = document.getElementById('saida-qtd');
+  if (inputQtd) {
+    inputQtd.focus();
+  }
 };
 
 App.atualizarInfoProdutoSaida = () => {
   const select = document.getElementById('saida-produto');
-  const prodId = Number(select.value);
+  const prodId = Number(select ? select.value : 0);
   const p = App.produtos.find(x => x.id === prodId);
   const infoBox = document.getElementById('saida-produto-info');
   const inputQtd = document.getElementById('saida-qtd');
 
   if (p) {
-    const alertColor = p.estoqueAtual <= p.estoqueMinimo ? '#f59e0b' : '#10b981';
+    const jaAdicionado = (App.itensRetirada || []).filter(i => i.produtoId === prodId).reduce((sum, i) => sum + i.quantidade, 0);
+    const saldoRestante = Math.max(0, p.estoqueAtual - jaAdicionado);
+    const alertColor = saldoRestante <= p.estoqueMinimo ? '#f59e0b' : '#10b981';
+
     infoBox.innerHTML = `
-      <div style="font-size: 0.85rem; background: #0f172a; padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid #334155;">
-        Saldo Disponível em Estoque: <strong style="color: ${alertColor}; font-size: 1.05rem;">${p.estoqueAtual} ${p.unidade}</strong>
-        ${p.estoqueAtual <= 0 ? ' <span style="color: #f43f5e; font-weight: bold;">(PRODUTO ESGOTADO!)</span>' : ''}
+      <div style="font-size: 0.82rem; background: #0f172a; padding: 0.45rem 0.75rem; border-radius: 4px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;">
+        <div>
+          Saldo Total em Estoque: <strong style="color: ${alertColor};">${p.estoqueAtual} ${p.unidade}</strong>
+          ${jaAdicionado > 0 ? `<span style="color: #38bdf8; margin-left: 0.5rem;">(Já na lista: <strong>${jaAdicionado} ${p.unidade}</strong> | Restante: <strong style="color: ${alertColor};">${saldoRestante} ${p.unidade}</strong>)</span>` : ''}
+          ${saldoRestante <= 0 ? ' <span style="color: #f43f5e; font-weight: bold; margin-left: 0.5rem;">(SEM SALDO DISPONÍVEL!)</span>' : ''}
+        </div>
+        <div style="color: #94a3b8; font-size: 0.78rem;">
+          Preço: <strong style="color: #f8fafc;">${App.formatarMoeda(p.valorUnitario)}</strong>
+        </div>
       </div>
     `;
-    inputQtd.max = p.estoqueAtual;
+    if (inputQtd) {
+      inputQtd.max = saldoRestante;
+    }
   } else {
     infoBox.innerHTML = '';
   }
+};
+
+App.adicionarItemRetirada = () => {
+  const select = document.getElementById('saida-produto');
+  const inputQtd = document.getElementById('saida-qtd');
+  const prodId = Number(select ? select.value : 0);
+  const quantidade = parseFloat(inputQtd ? inputQtd.value : 0);
+
+  if (!prodId) {
+    App.mostrarToast('Por favor, selecione um material na lista para adicionar.', 'warning');
+    if (select) select.focus();
+    return false;
+  }
+
+  if (isNaN(quantidade) || quantidade <= 0) {
+    App.mostrarToast('Informe uma quantidade válida e positiva para o material selecionado.', 'warning');
+    if (inputQtd) inputQtd.focus();
+    return false;
+  }
+
+  const p = App.produtos.find(x => x.id === prodId);
+  if (!p) return false;
+
+  const jaAdicionado = (App.itensRetirada || []).filter(i => i.produtoId === prodId).reduce((sum, i) => sum + i.quantidade, 0);
+  const totalDesejado = jaAdicionado + quantidade;
+
+  if (totalDesejado > p.estoqueAtual) {
+    App.mostrarToast(`Saldo insuficiente! Estoque disponível de "${p.nome}": ${p.estoqueAtual} ${p.unidade} (já adicionado na lista: ${jaAdicionado} ${p.unidade}).`, 'danger');
+    if (inputQtd) inputQtd.focus();
+    return false;
+  }
+
+  // Se já existir na lista, incrementa quantidade
+  const itemExistente = App.itensRetirada.find(i => i.produtoId === prodId);
+  if (itemExistente) {
+    itemExistente.quantidade = Math.round((itemExistente.quantidade + quantidade) * 100) / 100;
+    itemExistente.valorTotal = itemExistente.quantidade * itemExistente.valorUnitario;
+    App.mostrarToast(`Quantidade de "${p.nome}" atualizada para ${itemExistente.quantidade} ${p.unidade}!`, 'info');
+  } else {
+    App.itensRetirada.push({
+      produtoId: p.id,
+      produtoCodigo: p.codigo,
+      produtoNome: p.nome,
+      produtoUnidade: p.unidade,
+      valorUnitario: Number(p.valorUnitario) || 0,
+      quantidade: quantidade,
+      valorTotal: quantidade * (Number(p.valorUnitario) || 0)
+    });
+    App.mostrarToast(`"${p.nome}" adicionado à lista de retirada!`, 'success');
+  }
+
+  if (inputQtd) inputQtd.value = '';
+  App.atualizarInfoProdutoSaida();
+  App.renderizarItensRetirada();
+  if (select) select.focus();
+  return true;
+};
+
+App.removerItemRetirada = (index) => {
+  if (index >= 0 && index < App.itensRetirada.length) {
+    const itemRemovido = App.itensRetirada[index];
+    App.itensRetirada.splice(index, 1);
+    App.mostrarToast(`Item "${itemRemovido.produtoNome}" removido da lista.`, 'info');
+    App.atualizarInfoProdutoSaida();
+    App.renderizarItensRetirada();
+  }
+};
+
+App.renderizarItensRetirada = () => {
+  const tbody = document.getElementById('saida-itens-tabela-body');
+  const resumoItens = document.getElementById('saida-resumo-itens');
+  const resumoPecas = document.getElementById('saida-resumo-pecas');
+  const resumoTotal = document.getElementById('saida-resumo-total');
+
+  if (!tbody) return;
+
+  if (!App.itensRetirada || App.itensRetirada.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; padding: 1.5rem 1rem; color: var(--text-dim);">
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">Nenhum material adicionado à lista ainda.</div>
+          <div style="font-size: 0.76rem;">Selecione o material acima, defina a quantidade e clique no botão <strong>+ Adicionar Item</strong>.</div>
+        </td>
+      </tr>
+    `;
+    if (resumoItens) resumoItens.innerText = '0';
+    if (resumoPecas) resumoPecas.innerText = '0';
+    if (resumoTotal) resumoTotal.innerText = App.formatarMoeda(0);
+    return;
+  }
+
+  const totalItens = App.itensRetirada.length;
+  const totalPecas = App.itensRetirada.reduce((acc, i) => acc + (Number(i.quantidade) || 0), 0);
+  const totalValor = App.itensRetirada.reduce((acc, i) => acc + (Number(i.valorTotal) || 0), 0);
+
+  if (resumoItens) resumoItens.innerText = totalItens.toString();
+  if (resumoPecas) resumoPecas.innerText = totalPecas.toLocaleString('pt-BR');
+  if (resumoTotal) resumoTotal.innerText = App.formatarMoeda(totalValor);
+
+  tbody.innerHTML = App.itensRetirada.map((item, idx) => `
+    <tr>
+      <td style="text-align: center; font-weight: 700; color: #94a3b8;">${idx + 1}</td>
+      <td>
+        <strong>${item.produtoNome}</strong>
+        <div style="font-size: 0.72rem; color: #38bdf8; font-family: monospace;">Cód: ${item.produtoCodigo}</div>
+      </td>
+      <td style="text-align: center; font-weight: 700; color: #fb7185; font-size: 0.95rem;">${item.quantidade}</td>
+      <td><span class="badge badge-unit" style="font-size: 0.7rem; padding: 1px 6px;">${item.produtoUnidade}</span></td>
+      <td>${App.formatarMoeda(item.valorUnitario)}</td>
+      <td style="font-weight: 600; color: #34d399;">${App.formatarMoeda(item.valorTotal)}</td>
+      <td style="text-align: center;">
+        <button type="button" class="btn btn-outline-danger btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="App.removerItemRetirada(${idx})" title="Remover este material">
+          ✕
+        </button>
+      </td>
+    </tr>
+  `).join('');
 };
 
 // Ao selecionar ou digitar funcionário na retirada, preenche automaticamente o local/unidade!
@@ -1138,42 +1277,54 @@ App.aoSelecionarFuncionarioRetirada = (termo) => {
 };
 
 App.salvarSaida = async (e) => {
-  e.preventDefault();
-  const prodId = Number(document.getElementById('saida-produto').value);
-  const quantidade = parseFloat(document.getElementById('saida-qtd').value);
+  if (e && e.preventDefault) e.preventDefault();
+
+  // Trava anti-duplo clique e anti-concorrência
+  if (App.salvandoSaida) return;
+
+  // Se o usuário selecionou um produto e informou quantidade mas não clicou em "+ Adicionar Item", inclui automaticamente
+  const selectProd = document.getElementById('saida-produto');
+  const inputQtd = document.getElementById('saida-qtd');
+  if (selectProd && selectProd.value && inputQtd && parseFloat(inputQtd.value) > 0) {
+    App.adicionarItemRetirada();
+  }
+
+  if (!App.itensRetirada || App.itensRetirada.length === 0) {
+    App.mostrarToast('Por favor, selecione e adicione ao menos um material à lista de retirada.', 'warning');
+    if (selectProd) selectProd.focus();
+    return;
+  }
+
   const matriculaOuNome = document.getElementById('saida-funcionario-input').value.trim();
   const unidadeDestino = document.getElementById('saida-unidade').value.trim().toUpperCase();
   const motivo = document.getElementById('saida-motivo').value.trim();
   const dataHora = document.getElementById('saida-data').value || new Date().toISOString();
-  const responsavel = document.getElementById('saida-responsavel').value.trim() || 'ALMOXARIFADO';
-
-  if (!prodId) {
-    App.mostrarToast('Por favor, selecione o material/produto a retirar.', 'warning');
-    return;
-  }
-
-  if (isNaN(quantidade) || quantidade <= 0) {
-    App.mostrarToast('Informe uma quantidade válida e positiva para retirada.', 'warning');
-    return;
-  }
-
-  const p = App.produtos.find(x => x.id === prodId);
-  if (!p) return;
-
-  // Validação rigorosa de saldo em estoque
-  if (quantidade > p.estoqueAtual) {
-    App.mostrarToast(`Saldo insuficiente! Estoque disponível de "${p.nome}": apenas ${p.estoqueAtual} ${p.unidade}.`, 'danger');
-    return;
-  }
+  const responsavel = document.getElementById('saida-responsavel').value.trim() || 'ALMOXARIFADO CENTRAL';
 
   if (!matriculaOuNome) {
     App.mostrarToast('Informe o colaborador responsável pela retirada do material.', 'warning');
+    document.getElementById('saida-funcionario-input').focus();
     return;
   }
 
   if (!unidadeDestino) {
     App.mostrarToast('A unidade de destino deve ser preenchida.', 'warning');
+    document.getElementById('saida-unidade').focus();
     return;
+  }
+
+  // Validação atualizada de estoque no banco de dados para todos os itens da retirada
+  const produtosNoBanco = await window.db.getAll('produtos');
+  for (const item of App.itensRetirada) {
+    const p = produtosNoBanco.find(x => x.id === item.produtoId);
+    if (!p) {
+      App.mostrarToast(`Produto "${item.produtoNome}" não foi encontrado no banco de dados.`, 'danger');
+      return;
+    }
+    if (item.quantidade > p.estoqueAtual) {
+      App.mostrarToast(`Saldo insuficiente para "${p.nome}"! Estoque atual: ${p.estoqueAtual} ${p.unidade}, quantidade solicitada: ${item.quantidade} ${p.unidade}.`, 'danger');
+      return;
+    }
   }
 
   const emp = App.selectedEmployeeForExit || {
@@ -1183,46 +1334,78 @@ App.salvarSaida = async (e) => {
     local: unidadeDestino
   };
 
-  const estoqueAnterior = Number(p.estoqueAtual);
-  const novoEstoque = estoqueAnterior - quantidade;
+  const btnConfirmar = document.getElementById('btn-confirmar-saida');
+  const txtOriginal = btnConfirmar ? btnConfirmar.innerText : 'Confirmar Retirada';
+  if (btnConfirmar) {
+    btnConfirmar.disabled = true;
+    btnConfirmar.innerText = 'Processando...';
+  }
+  App.salvandoSaida = true;
 
-  // Atualiza saldo do produto
-  p.estoqueAtual = novoEstoque;
-  p.dataAtualizacao = new Date().toISOString();
-  await window.db.update('produtos', p);
+  try {
+    // Código de transação unificado para agrupar todos os materiais na mesma Cautela de Retirada
+    const transacaoId = 'RET-' + Date.now().toString().slice(-6);
 
-  // Registra movimentação de saída vinculando funcionário e unidade
-  const movId = await window.db.add('movimentacoes', {
-    tipo: 'SAIDA',
-    subtipo: 'RETIRADA_COLABORADOR',
-    produtoId: p.id,
-    produtoCodigo: p.codigo,
-    produtoNome: p.nome,
-    produtoUnidade: p.unidade,
-    quantidade,
-    valorUnitario: p.valorUnitario,
-    valorTotal: quantidade * p.valorUnitario,
-    estoqueAnterior,
-    estoqueNovo: novoEstoque,
-    dataHora,
-    matriculaFuncionario: emp.matricula,
-    nomeFuncionario: emp.nome,
-    cargoFuncionario: emp.cargo,
-    unidadeDestino,
-    motivo: motivo || 'Retirada de Material para Operação / Manutenção',
-    responsavel
-  });
+    // Deduz estoque e salva cada movimentação de saída
+    for (const item of App.itensRetirada) {
+      const p = App.produtos.find(x => x.id === item.produtoId);
+      if (!p) continue;
 
-  App.notificarSalvamento();
-  App.fecharModal('modal-saida');
-  App.mostrarToast(`Retirada de ${quantidade} ${p.unidade} confirmada para ${emp.nome} (Unidade: ${unidadeDestino})!`, 'success');
-  
-  await App.carregarDados();
-  App.renderizarTudo();
+      const estoqueAnterior = Number(p.estoqueAtual);
+      const novoEstoque = estoqueAnterior - item.quantidade;
 
-  // Oferece impressão imediata da Cautela de Retirada
-  if (confirm(`Deseja imprimir o Comprovante / Cautela de Retirada nº ${movId} agora?`)) {
-    App.imprimirCautela(movId);
+      // Atualiza saldo do produto
+      p.estoqueAtual = novoEstoque;
+      p.dataAtualizacao = new Date().toISOString();
+      await window.db.update('produtos', p);
+
+      // Registra movimentação de saída vinculando o grupo/transação
+      await window.db.add('movimentacoes', {
+        tipo: 'SAIDA',
+        subtipo: 'RETIRADA_COLABORADOR',
+        transacaoId,
+        produtoId: p.id,
+        produtoCodigo: p.codigo,
+        produtoNome: p.nome,
+        produtoUnidade: p.unidade,
+        quantidade: item.quantidade,
+        valorUnitario: item.valorUnitario,
+        valorTotal: item.valorTotal,
+        estoqueAnterior,
+        estoqueNovo: novoEstoque,
+        dataHora,
+        matriculaFuncionario: emp.matricula,
+        nomeFuncionario: emp.nome,
+        cargoFuncionario: emp.cargo,
+        unidadeDestino,
+        motivo: motivo || 'Retirada de Material para Operação / Manutenção',
+        responsavel
+      });
+    }
+
+    const totalPecas = App.itensRetirada.reduce((acc, i) => acc + i.quantidade, 0);
+    const qtdMateriais = App.itensRetirada.length;
+
+    App.notificarSalvamento();
+    App.fecharModal('modal-saida');
+    App.mostrarToast(`Retirada de ${totalPecas} peças (${qtdMateriais} material(is)) confirmada para ${emp.nome}!`, 'success');
+
+    await App.carregarDados();
+    App.renderizarTudo();
+
+    // Oferece emissão imediata da Cautela de Retirada consolidada com todos os materiais
+    if (confirm(`Retirada registrada com sucesso!\n\nDeseja emitir e imprimir o Comprovante / Cautela de Retirada nº ${transacaoId} agora?`)) {
+      App.imprimirCautela(transacaoId);
+    }
+  } catch (err) {
+    console.error('Erro ao processar retirada de materiais:', err);
+    App.mostrarToast('Erro ao processar retirada de materiais.', 'danger');
+  } finally {
+    App.salvandoSaida = false;
+    if (btnConfirmar) {
+      btnConfirmar.disabled = false;
+      btnConfirmar.innerText = txtOriginal;
+    }
   }
 };
 
@@ -1713,13 +1896,35 @@ App.gerarRelatorioMovimentacoes = () => {
   window.print();
 };
 
-// Emissão e impressão de Cautela / Comprovante de Retirada individual
-App.imprimirCautela = (movId) => {
-  const m = App.movimentacoes.find(x => x.id === movId);
-  if (!m) return;
+// Emissão e impressão de Cautela / Comprovante de Retirada (individual ou com múltiplos materiais)
+App.imprimirCautela = (idOuTransacao) => {
+  // Procura por transacaoId primeiro (agrupamento de múltiplos materiais)
+  let movs = App.movimentacoes.filter(m => m.transacaoId && String(m.transacaoId) === String(idOuTransacao));
 
+  // Se não encontrou por transacaoId, tenta por ID numérico individual
+  if (movs.length === 0) {
+    const movIndividual = App.movimentacoes.find(x => x.id === Number(idOuTransacao) || String(x.id) === String(idOuTransacao));
+    if (movIndividual) {
+      if (movIndividual.transacaoId) {
+        // Encontra todos os itens que compartilham a mesma transação
+        movs = App.movimentacoes.filter(x => x.transacaoId === movIndividual.transacaoId);
+      } else {
+        movs = [movIndividual];
+      }
+    }
+  }
+
+  if (movs.length === 0) {
+    App.mostrarToast('Registro de retirada não encontrado para impressão.', 'warning');
+    return;
+  }
+
+  const m = movs[0];
   const printArea = document.getElementById('print-area');
   const dataFormatada = App.formatarData(m.dataHora);
+  const totalPecas = movs.reduce((acc, item) => acc + (Number(item.quantidade) || 0), 0);
+  const totalFinanceiro = movs.reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0);
+  const numCautela = m.transacaoId || `#${m.id.toString().padStart(5, '0')}`;
 
   printArea.innerHTML = `
     <div class="print-page">
@@ -1727,7 +1932,7 @@ App.imprimirCautela = (movId) => {
         <img src="logo_santos.jpg" class="print-logo" alt="Santos Manutenções" />
         <div class="print-title-box">
           <div class="print-title">Cautela de Retirada de Material</div>
-          <div class="print-date">Nº Registro: <strong>#${m.id.toString().padStart(5, '0')}</strong></div>
+          <div class="print-date">Nº Registro: <strong>${numCautela}</strong></div>
         </div>
       </div>
 
@@ -1738,30 +1943,42 @@ App.imprimirCautela = (movId) => {
           <div><strong>Colaborador:</strong> ${m.nomeFuncionario || 'Não informado'}</div>
           <div><strong>Matrícula:</strong> ${m.matriculaFuncionario || '-'}</div>
           <div><strong>Cargo:</strong> ${m.cargoFuncionario || '-'}</div>
-          <div><strong>Responsável Almoxarifado:</strong> ${m.responsavel || 'ALMOXARIFADO'}</div>
+          <div><strong>Responsável Almoxarifado:</strong> ${m.responsavel || 'ALMOXARIFADO CENTRAL'}</div>
         </div>
 
-        <div style="border-top: 1px solid #000; padding-top: 10px; margin-top: 5px;">
-          <h4 style="margin-bottom: 8px; text-transform: uppercase;">Material Retirado</h4>
+        <div style="border-top: 1px solid #000; padding-top: 10px; margin-top: 8px;">
+          <h4 style="margin-bottom: 8px; text-transform: uppercase;">Materiais Retirados (${movs.length} ${movs.length === 1 ? 'item' : 'itens'})</h4>
           <table class="print-table" style="margin-top: 0;">
             <thead>
               <tr>
-                <th>Código</th>
+                <th style="width: 32px; text-align: center;">#</th>
+                <th style="width: 100px;">Código</th>
                 <th>Descrição do Material</th>
-                <th>Quantidade</th>
-                <th>Valor Unitário</th>
-                <th>Valor Total</th>
+                <th style="text-align: center; width: 90px;">Quantidade</th>
+                <th style="text-align: right; width: 110px;">Valor Unitário</th>
+                <th style="text-align: right; width: 110px;">Valor Total</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>${m.produtoCodigo}</td>
-                <td><strong>${m.produtoNome}</strong></td>
-                <td style="font-size: 1.1em; font-weight: bold;">${m.quantidade} ${m.produtoUnidade}</td>
-                <td>${App.formatarMoeda(m.valorUnitario)}</td>
-                <td>${App.formatarMoeda(m.valorTotal)}</td>
-              </tr>
+              ${movs.map((item, idx) => `
+                <tr>
+                  <td style="text-align: center;">${idx + 1}</td>
+                  <td><code>${item.produtoCodigo || '-'}</code></td>
+                  <td><strong>${item.produtoNome}</strong></td>
+                  <td style="text-align: center; font-size: 1.05em; font-weight: bold;">${item.quantidade} ${item.produtoUnidade || 'UN'}</td>
+                  <td style="text-align: right;">${App.formatarMoeda(item.valorUnitario)}</td>
+                  <td style="text-align: right; font-weight: 600;">${App.formatarMoeda(item.valorTotal)}</td>
+                </tr>
+              `).join('')}
             </tbody>
+            <tfoot>
+              <tr style="font-weight: bold; background: #f8fafc; border-top: 2px solid #000;">
+                <td colspan="3" style="text-align: right;">TOTAL GERAL:</td>
+                <td style="text-align: center; font-size: 1.05em;">${totalPecas}</td>
+                <td style="text-align: right;">-</td>
+                <td style="text-align: right; font-size: 1.05em; color: #000;">${App.formatarMoeda(totalFinanceiro)}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -1814,9 +2031,9 @@ App.exportarMovimentacoesCSV = () => {
     return;
   }
 
-  let csv = 'DataHora;Tipo;CodigoProduto;Produto;Quantidade;Unidade;ValorUnitario;ValorTotal;MatriculaColaborador;Colaborador;UnidadeDestino;Motivo\n';
+  let csv = 'DataHora;Tipo;NumeroCautela;CodigoProduto;Produto;Quantidade;Unidade;ValorUnitario;ValorTotal;MatriculaColaborador;Colaborador;UnidadeDestino;Motivo\n';
   App.movimentacoes.forEach(m => {
-    csv += `"${App.formatarData(m.dataHora)}";"${m.tipo}";"${m.produtoCodigo}";"${m.produtoNome}";${m.quantidade};"${m.produtoUnidade}";${m.valorUnitario.toFixed(2)};${m.valorTotal.toFixed(2)};"${m.matriculaFuncionario || ''}";"${m.nomeFuncionario || ''}";"${m.unidadeDestino || ''}";"${m.motivo || ''}"\n`;
+    csv += `"${App.formatarData(m.dataHora)}";"${m.tipo}";"${m.transacaoId || ''}";"${m.produtoCodigo}";"${m.produtoNome}";${m.quantidade};"${m.produtoUnidade}";${m.valorUnitario.toFixed(2)};${m.valorTotal.toFixed(2)};"${m.matriculaFuncionario || ''}";"${m.nomeFuncionario || ''}";"${m.unidadeDestino || ''}";"${m.motivo || ''}"\n`;
   });
 
   App.baixarArquivo(csv, `movimentacoes_santos_manutencoes_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv;charset=utf-8;');

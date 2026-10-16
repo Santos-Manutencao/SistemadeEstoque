@@ -1644,3 +1644,61 @@ body.light-theme .user-session-badge {
     flex-wrap: wrap;
   }
 }
+
+/* ==========================================================================
+   Multi-Item Withdrawal (Retirada de Materiais Múltiplos)
+   ========================================================================== */
+.saida-section-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+}
+
+body.light-theme .saida-section-card {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.saida-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+body.light-theme .saida-section-title {
+  color: #0284c7;
+  border-bottom-color: rgba(2, 132, 199, 0.2);
+}
+
+.saida-resumo-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0b1120;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+body.light-theme .saida-resumo-bar {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+body.light-theme .saida-resumo-bar strong {
+  color: #0f172a !important;
+}
+
