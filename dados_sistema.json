@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-26T18:21:23.929Z",
+  "ultimaAtualizacao": "2026-10-26T18:24:32.846Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -74,13 +74,14 @@
       "unidade": "UN",
       "valorUnitario": 18.5,
       "estoqueInicial": 2,
-      "estoqueAtual": 2,
+      "estoqueAtual": -2,
       "estoqueMinimo": 5,
       "localizacao": "",
       "descricao": "",
       "foto": "",
       "dataCadastro": "2026-10-08T18:18:58.983Z",
-      "id": 13
+      "id": 13,
+      "dataAtualizacao": "2026-10-26T18:24:12.576Z"
     },
     {
       "codigo": "EPI-006",
@@ -1351,6 +1352,50 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 53
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-052576",
+      "produtoId": 13,
+      "produtoCodigo": "EPI-005",
+      "produtoNome": "COLETE REFLETIVO M",
+      "produtoUnidade": "UN",
+      "quantidade": 2,
+      "valorUnitario": 18.5,
+      "valorTotal": 37,
+      "estoqueAnterior": 2,
+      "estoqueNovo": 0,
+      "dataHora": "2026-10-26T18:21",
+      "matriculaFuncionario": "550",
+      "nomeFuncionario": "TSA",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 54
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-052576",
+      "produtoId": 13,
+      "produtoCodigo": "EPI-005",
+      "produtoNome": "COLETE REFLETIVO M",
+      "produtoUnidade": "UN",
+      "quantidade": 2,
+      "valorUnitario": 18.5,
+      "valorTotal": 37,
+      "estoqueAnterior": 0,
+      "estoqueNovo": -2,
+      "dataHora": "2026-10-26T18:21",
+      "matriculaFuncionario": "550",
+      "nomeFuncionario": "TSA",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 55
     }
   ],
   "colaboradores": [
