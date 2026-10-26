@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-10-15T17:39:49.500Z",
+  "ultimaAtualizacao": "2026-10-26T18:21:23.929Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -2153,6 +2153,16 @@
       "ativo": true,
       "dataCadastro": "2026-10-15T13:31:55.958Z",
       "id": 80
+    },
+    {
+      "matricula": "550",
+      "nome": "TSA",
+      "cpf": "",
+      "cargo": "ADM",
+      "local": "TSA",
+      "ativo": true,
+      "dataCadastro": "2026-10-26T18:21:19.444Z",
+      "id": 81
     }
   ]
 }
