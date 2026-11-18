@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T16:57:32.020Z",
+  "ultimaAtualizacao": "2026-11-18T16:57:35.466Z",
   "ultimoAutorSessionId": "cli_mwmd5gsh_3ui90b",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
@@ -28,14 +28,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 30,
-      "estoqueAtual": 38,
+      "estoqueAtual": 41,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:37:24.586Z",
       "id": 10,
-      "dataAtualizacao": "2026-11-18T16:57:31.251Z"
+      "dataAtualizacao": "2026-11-18T16:57:34.949Z"
     },
     {
       "codigo": "EPI-003",
