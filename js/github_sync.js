@@ -17,6 +17,7 @@ const GitHubSync = {
   LAST_SYNC_KEY: 'santos_ultimo_sync_ts',
   LAST_SHA_KEY: 'santos_ultimo_sha_aplicado',
   LAST_TS_KEY: 'santos_ultimo_ts_aplicado',
+  EXCLUIDAS_KEY: 'santos_movs_excluidas',
   
   isSyncing: false,
   debounceTimer: null,
@@ -72,6 +73,32 @@ const GitHubSync = {
 
   estaConectado() {
     return Boolean(this.obterToken());
+  },
+
+  // Gerenciamento de Movimentações Excluídas (Tombstones anti-ressurreição)
+  obterMovsExcluidas() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(this.EXCLUIDAS_KEY) || '[]');
+      return new Set((arr || []).map(x => String(x)));
+    } catch (e) {
+      return new Set();
+    }
+  },
+
+  registrarMovimentacaoExcluida(idOuKey) {
+    if (!idOuKey) return;
+    const set = this.obterMovsExcluidas();
+    set.add(String(idOuKey));
+    localStorage.setItem(this.EXCLUIDAS_KEY, JSON.stringify(Array.from(set)));
+  },
+
+  registrarVariasMovimentacoesExcluidas(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    const set = this.obterMovsExcluidas();
+    ids.forEach(id => {
+      if (id) set.add(String(id));
+    });
+    localStorage.setItem(this.EXCLUIDAS_KEY, JSON.stringify(Array.from(set)));
   },
 
   // Atualiza o indicador visual de nuvem no cabeçalho
@@ -160,6 +187,22 @@ const GitHubSync = {
     if (!dadosRemotos) return dadosLocais;
     if (!dadosLocais) return dadosRemotos;
 
+    // 0. RECONCILIAÇÃO DE EXCLUSÕES (Tombstones: impede que movimentações excluídas reapareçam)
+    const setExcluidas = this.obterMovsExcluidas();
+    if (dadosRemotos && Array.isArray(dadosRemotos.movimentacoesExcluidas)) {
+      dadosRemotos.movimentacoesExcluidas.forEach(id => {
+        if (id) setExcluidas.add(String(id));
+      });
+    }
+    localStorage.setItem(this.EXCLUIDAS_KEY, JSON.stringify(Array.from(setExcluidas)));
+
+    const movFoiExcluida = (m) => {
+      if (!m) return true;
+      if (m.id && setExcluidas.has(String(m.id))) return true;
+      if (m.transacaoId && setExcluidas.has(String(m.transacaoId))) return true;
+      return false;
+    };
+
     // 1. RECONCILIAÇÃO DE COLABORADORES (União de matrículas)
     const colabsMap = new Map();
     (dadosRemotos.colaboradores || []).forEach(c => {
@@ -172,8 +215,7 @@ const GitHubSync = {
     });
     const colabsConsolidados = Array.from(colabsMap.values());
 
-    // 2. RECONCILIAÇÃO DE MOVIMENTAÇÕES (União total de histórico)
-    // Movimentações são registros permanentes: nunca descarta movimentação registrada em qualquer computador!
+    // 2. RECONCILIAÇÃO DE MOVIMENTAÇÕES (União total de histórico respeitando exclusões)
     const movsMap = new Map();
     const gerarChaveMov = (m) => {
       if (m.id) return `id_${m.id}`;
@@ -181,17 +223,19 @@ const GitHubSync = {
     };
 
     (dadosRemotos.movimentacoes || []).forEach(m => {
-      if (m) movsMap.set(gerarChaveMov(m), m);
+      if (m && !movFoiExcluida(m)) movsMap.set(gerarChaveMov(m), m);
     });
     (dadosLocais.movimentacoes || []).forEach(m => {
-      if (m) {
+      if (m && !movFoiExcluida(m)) {
         const k = gerarChaveMov(m);
         if (!movsMap.has(k)) {
           movsMap.set(k, m);
         }
       }
     });
-    const movsConsolidadas = Array.from(movsMap.values()).sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+    const movsConsolidadas = Array.from(movsMap.values())
+      .filter(m => !movFoiExcluida(m))
+      .sort((a, b) => new Date(b.dataHora || 0) - new Date(a.dataHora || 0) || (Number(b.id) || 0) - (Number(a.id) || 0));
 
     // 3. RECONCILIAÇÃO DE PRODUTOS
     // Atualiza saldos respeitando a modificação mais recente (dataAtualizacao)
@@ -227,6 +271,7 @@ const GitHubSync = {
     return {
       produtos: prodsConsolidados,
       movimentacoes: movsConsolidadas,
+      movimentacoesExcluidas: Array.from(setExcluidas),
       colaboradores: colabsConsolidados
     };
   },
@@ -438,6 +483,7 @@ const GitHubSync = {
         usuario: (window.App && window.App.usuarioLogado) ? window.App.usuarioLogado.usuario : 'Admin',
         produtos: reconciliado.produtos,
         movimentacoes: reconciliado.movimentacoes,
+        movimentacoesExcluidas: reconciliado.movimentacoesExcluidas || Array.from(this.obterMovsExcluidas()),
         colaboradores: reconciliado.colaboradores
       };
 

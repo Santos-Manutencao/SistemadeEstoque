@@ -1567,8 +1567,12 @@ App.removerTodasEntradas = async (silencioso = false) => {
     }
 
     // 1. Remove cada movimentação de ENTRADA do banco de dados
+    const idsEntradas = entradas.map(e => e.id);
     for (const ent of entradas) {
       await window.db.delete('movimentacoes', ent.id);
+    }
+    if (window.GitHubSync && window.GitHubSync.registrarVariasMovimentacoesExcluidas) {
+      window.GitHubSync.registrarVariasMovimentacoesExcluidas(idsEntradas);
     }
 
     // 2. Movimentações que permanecem (ex: saídas)
@@ -1611,8 +1615,10 @@ App.removerTodasEntradas = async (silencioso = false) => {
 
 // Exclui uma movimentação individual (seja entrada ou saída) com estorno de estoque
 App.excluirMovimentacao = async (movId) => {
-  const mov = App.movimentacoes.find(m => m.id === movId);
+  const idNum = Number(movId);
+  const mov = App.movimentacoes.find(m => Number(m.id) === idNum || String(m.id) === String(movId));
   if (!mov) {
+    console.warn('Movimentação não encontrada:', movId);
     App.mostrarToast('Movimentação não encontrada.', 'danger');
     return;
   }
@@ -1627,25 +1633,45 @@ App.excluirMovimentacao = async (movId) => {
   }
 
   try {
-    const prod = App.produtos.find(p => p.id === mov.produtoId || p.codigo === mov.produtoCodigo);
+    // 1. Estorno do estoque do produto correspondente
+    const prod = App.produtos.find(p => Number(p.id) === Number(mov.produtoId) || p.codigo === mov.produtoCodigo);
     if (prod) {
       if (isEntrada) {
         // Estorno de entrada: deduz do estoque atual
         prod.estoqueAtual = Math.max(0, (Number(prod.estoqueAtual) || 0) - Number(mov.quantidade));
       } else {
-        // Estorno de saída: devolve ao estoque atual
+        // Estorno de saída / retirada: devolve ao estoque atual
         prod.estoqueAtual = (Number(prod.estoqueAtual) || 0) + Number(mov.quantidade);
       }
       prod.dataAtualizacao = new Date().toISOString();
       await window.db.update('produtos', prod);
     }
 
+    // 2. Remove do IndexedDB local
     await window.db.delete('movimentacoes', mov.id);
+    if (idNum && mov.id !== idNum) {
+      await window.db.delete('movimentacoes', idNum);
+    }
 
-    App.movimentacoes = App.movimentacoes.filter(m => m.id !== movId);
+    // 3. Registra a exclusão no motor de sincronização para que não seja ressuscitada no sync
+    if (window.GitHubSync && window.GitHubSync.registrarMovimentacaoExcluida) {
+      window.GitHubSync.registrarMovimentacaoExcluida(mov.id);
+      if (idNum) window.GitHubSync.registrarMovimentacaoExcluida(idNum);
+      if (mov.transacaoId) window.GitHubSync.registrarMovimentacaoExcluida(mov.transacaoId);
+    }
+
+    // 4. Remove imediatamente da memória e força a atualização visual instantânea da tabela
+    App.movimentacoes = App.movimentacoes.filter(m => Number(m.id) !== idNum && String(m.id) !== String(mov.id));
+    App.renderizarMovimentacoes();
+    App.atualizarDashboard();
+
+    // 5. Recarrega base completa e atualiza todos os componentes
+    await App.carregarDados();
     App.renderizarTudo();
+
+    // 6. Agenda sincronização com a nuvem
     App.notificarSalvamento();
-    App.mostrarToast('Movimentação excluída e saldo atualizado com sucesso!', 'success');
+    App.mostrarToast('Movimentação excluída e lista atualizada com sucesso!', 'success');
   } catch (err) {
     console.error('Erro ao excluir movimentação:', err);
     App.mostrarToast('Erro ao excluir movimentação.', 'danger');
@@ -1675,6 +1701,9 @@ App.renderizarMovimentacoes = () => {
 
     return matchTipo && matchUnidade && matchBusca;
   });
+
+  // Ordena as movimentações da mais recente para a mais antiga
+  filtradas.sort((a, b) => new Date(b.dataHora || 0) - new Date(a.dataHora || 0) || (Number(b.id) || 0) - (Number(a.id) || 0));
 
   if (filtradas.length === 0) {
     container.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-dim);">Nenhuma movimentação encontrada com os filtros selecionados.</td></tr>';
@@ -1708,9 +1737,10 @@ App.renderizarMovimentacoes = () => {
         <td style="font-weight: 700; color: ${corQtd};">${sinal}${m.quantidade} ${m.produtoUnidade || 'UN'}</td>
         <td style="font-weight: 600;">${App.formatarMoeda(m.valorTotal)}</td>
         <td>${colabHtml}</td>
+        <td>${m.unidadeDestino || '-'}</td>
         <td style="text-align: right; white-space: nowrap;">
-          ${!isEntrada ? `<button class="btn btn-outline btn-sm" onclick="App.imprimirCautela(${m.id})" title="Imprimir Comprovante">📄 Cautela</button>` : ''}
-          <button class="btn btn-outline-danger btn-sm" onclick="App.excluirMovimentacao(${m.id})" title="Excluir Lançamento">🗑️ Excluir</button>
+          ${!isEntrada ? `<button class="btn btn-outline btn-sm" onclick="App.imprimirCautela('${m.id}')" title="Imprimir Comprovante">📄 Cautela</button>` : ''}
+          <button class="btn btn-outline-danger btn-sm" onclick="App.excluirMovimentacao('${m.id}')" title="Excluir Lançamento">🗑️ Excluir</button>
         </td>
       </tr>
     `;
