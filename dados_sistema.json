@@ -1,7 +1,7 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T16:34:46.955Z",
-  "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
+  "ultimaAtualizacao": "2026-11-18T16:35:39.044Z",
+  "dispositivoOrigem": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb",
   "usuario": "admin",
   "produtos": [
     {
@@ -11,14 +11,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 38,
-      "estoqueAtual": 45,
+      "estoqueAtual": 44,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:35:38.276Z",
       "id": 9,
-      "dataAtualizacao": "2026-11-18T14:03:55.332Z"
+      "dataAtualizacao": "2026-11-18T16:32:37.296Z"
     },
     {
       "codigo": "EPI-002",
@@ -27,14 +27,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 30,
-      "estoqueAtual": 28,
+      "estoqueAtual": 20,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:37:24.586Z",
       "id": 10,
-      "dataAtualizacao": "2026-11-18T16:34:39.309Z"
+      "dataAtualizacao": "2026-11-18T16:31:26.134Z"
     },
     {
       "codigo": "EPI-003",
@@ -297,14 +297,14 @@
       "unidade": "PAR",
       "valorUnitario": 174.99,
       "estoqueInicial": 7,
-      "estoqueAtual": 7,
+      "estoqueAtual": 4,
       "estoqueMinimo": 5,
       "localizacao": "",
       "descricao": "CA: 42374",
       "foto": "",
       "dataCadastro": "2026-10-08T18:56:23.223Z",
       "id": 27,
-      "dataAtualizacao": "2026-11-18T16:34:42.258Z"
+      "dataAtualizacao": "2026-11-18T13:25:54.590Z"
     },
     {
       "codigo": "EPI-020",
@@ -2410,6 +2410,138 @@
       "responsavel": "Almoxarifado Santos",
       "motivo": "Entrada / Reposição de Estoque",
       "id": 115
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-326772",
+      "produtoId": 27,
+      "produtoCodigo": "EPI-019",
+      "produtoNome": "BOTA DE SEGURANÇA 42",
+      "produtoUnidade": "PAR",
+      "quantidade": 3,
+      "valorUnitario": 174.99,
+      "valorTotal": 524.97,
+      "estoqueAnterior": 4,
+      "estoqueNovo": 1,
+      "dataHora": "2026-11-18T13:25",
+      "matriculaFuncionario": "550",
+      "nomeFuncionario": "TSA",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 117
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-466849",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 1,
+      "valorUnitario": 5.9,
+      "valorTotal": 5.9,
+      "estoqueAnterior": 28,
+      "estoqueNovo": 27,
+      "dataHora": "2026-11-18T16:30",
+      "matriculaFuncionario": "130",
+      "nomeFuncionario": "ANGELICA APARECIDA DE OLIVEIRA",
+      "cargoFuncionario": "SERVIÇOS GERAIS",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 120
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-466850",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 1,
+      "valorUnitario": 5.9,
+      "valorTotal": 5.9,
+      "estoqueAnterior": 27,
+      "estoqueNovo": 26,
+      "dataHora": "2026-11-18T16:30",
+      "matriculaFuncionario": "130",
+      "nomeFuncionario": "ANGELICA APARECIDA DE OLIVEIRA",
+      "cargoFuncionario": "SERVIÇOS GERAIS",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 121
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-486134",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 3,
+      "valorUnitario": 5.9,
+      "valorTotal": 17.700000000000003,
+      "estoqueAnterior": 26,
+      "estoqueNovo": 23,
+      "dataHora": "2026-11-18T16:31",
+      "matriculaFuncionario": "136",
+      "nomeFuncionario": "ANDRE LUIZ APARECIDO CORDEIRO",
+      "cargoFuncionario": "ELETRICISTA",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 122
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-486134",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 3,
+      "valorUnitario": 5.9,
+      "valorTotal": 17.700000000000003,
+      "estoqueAnterior": 23,
+      "estoqueNovo": 20,
+      "dataHora": "2026-11-18T16:31",
+      "matriculaFuncionario": "136",
+      "nomeFuncionario": "ANDRE LUIZ APARECIDO CORDEIRO",
+      "cargoFuncionario": "ELETRICISTA",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 123
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-557282",
+      "produtoId": 9,
+      "produtoCodigo": "EPI-001",
+      "produtoNome": "ÓCULOS DE SEGURANÇA INCOLOR",
+      "produtoUnidade": "UN",
+      "quantidade": 1,
+      "valorUnitario": 5.9,
+      "valorTotal": 5.9,
+      "estoqueAnterior": 45,
+      "estoqueNovo": 44,
+      "dataHora": "2026-11-18T16:32",
+      "matriculaFuncionario": "39",
+      "nomeFuncionario": "ADELMO JOAO CAMPOS",
+      "cargoFuncionario": "SERVIÇOS GERAIS",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 124
     }
   ],
   "colaboradores": [
@@ -2420,7 +2552,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.740Z",
+      "dataCadastro": "2026-09-25T17:48:42.105Z",
       "id": 1
     },
     {
@@ -2430,7 +2562,7 @@
       "cargo": "MANTENEDOR",
       "local": "TCS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.741Z",
+      "dataCadastro": "2026-09-25T17:48:42.113Z",
       "id": 2
     },
     {
@@ -2440,7 +2572,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.742Z",
+      "dataCadastro": "2026-09-25T17:48:42.123Z",
       "id": 3
     },
     {
@@ -2450,7 +2582,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.766Z",
+      "dataCadastro": "2026-09-25T17:48:42.203Z",
       "id": 4
     },
     {
@@ -2460,7 +2592,7 @@
       "cargo": "ELETRICISTA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.767Z",
+      "dataCadastro": "2026-09-25T17:48:42.204Z",
       "id": 5
     },
     {
@@ -2470,7 +2602,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.767Z",
+      "dataCadastro": "2026-09-25T17:48:42.206Z",
       "id": 6
     },
     {
@@ -2480,7 +2612,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.768Z",
+      "dataCadastro": "2026-09-25T17:48:42.207Z",
       "id": 7
     },
     {
@@ -2490,7 +2622,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "ITAMINAS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.770Z",
+      "dataCadastro": "2026-09-25T17:48:42.207Z",
       "id": 8
     },
     {
@@ -2500,7 +2632,7 @@
       "cargo": "CONFERENTE DE PRODUÇÃO",
       "local": "TCS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.770Z",
+      "dataCadastro": "2026-09-25T17:48:42.210Z",
       "id": 9
     },
     {
@@ -2510,7 +2642,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.771Z",
+      "dataCadastro": "2026-09-25T17:48:42.211Z",
       "id": 10
     },
     {
@@ -2520,7 +2652,7 @@
       "cargo": "ENCARREGADO DE MECANICA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.771Z",
+      "dataCadastro": "2026-09-25T17:48:42.212Z",
       "id": 11
     },
     {
@@ -2530,7 +2662,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.772Z",
+      "dataCadastro": "2026-09-25T17:48:42.213Z",
       "id": 12
     },
     {
@@ -2540,7 +2672,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.772Z",
+      "dataCadastro": "2026-09-25T17:48:42.217Z",
       "id": 13
     },
     {
@@ -2550,7 +2682,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.772Z",
+      "dataCadastro": "2026-09-25T17:48:42.219Z",
       "id": 14
     },
     {
@@ -2560,7 +2692,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.773Z",
+      "dataCadastro": "2026-09-25T17:48:42.220Z",
       "id": 15
     },
     {
@@ -2570,7 +2702,7 @@
       "cargo": "AUXILIAR ADMINISTRATIVO",
       "local": "ADM",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.773Z",
+      "dataCadastro": "2026-09-25T17:48:42.221Z",
       "id": 16
     },
     {
@@ -2580,7 +2712,7 @@
       "cargo": "PINTOR",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.774Z",
+      "dataCadastro": "2026-09-25T17:48:42.222Z",
       "id": 17
     },
     {
@@ -2590,7 +2722,7 @@
       "cargo": "LUBRIFICADOR",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.774Z",
+      "dataCadastro": "2026-09-25T17:48:42.223Z",
       "id": 18
     },
     {
@@ -2600,7 +2732,7 @@
       "cargo": "ENCARREGADO",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.775Z",
+      "dataCadastro": "2026-09-25T17:48:42.224Z",
       "id": 19
     },
     {
@@ -2610,7 +2742,7 @@
       "cargo": "OPERADOR DE MANTENEDOR",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.775Z",
+      "dataCadastro": "2026-09-25T17:48:42.225Z",
       "id": 20
     },
     {
@@ -2620,7 +2752,7 @@
       "cargo": "SOLDADOR",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.776Z",
+      "dataCadastro": "2026-09-25T17:48:42.226Z",
       "id": 21
     },
     {
@@ -2630,7 +2762,7 @@
       "cargo": "ENCARREGADO",
       "local": "ADM",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.776Z",
+      "dataCadastro": "2026-09-25T17:48:42.227Z",
       "id": 22
     },
     {
@@ -2640,7 +2772,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.776Z",
+      "dataCadastro": "2026-09-25T17:48:42.227Z",
       "id": 23
     },
     {
@@ -2650,7 +2782,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.777Z",
+      "dataCadastro": "2026-09-25T17:48:42.229Z",
       "id": 24
     },
     {
@@ -2660,7 +2792,7 @@
       "cargo": "GERENTE OPERACIONAL",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.777Z",
+      "dataCadastro": "2026-09-25T17:48:42.230Z",
       "id": 25
     },
     {
@@ -2670,7 +2802,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.778Z",
+      "dataCadastro": "2026-09-25T17:48:42.232Z",
       "id": 26
     },
     {
@@ -2680,7 +2812,7 @@
       "cargo": "OPERADOR DE MAQUINAS LEVES",
       "local": "TCS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.778Z",
+      "dataCadastro": "2026-09-25T17:48:42.232Z",
       "id": 27
     },
     {
@@ -2690,7 +2822,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.778Z",
+      "dataCadastro": "2026-09-25T17:48:42.233Z",
       "id": 28
     },
     {
@@ -2700,7 +2832,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.779Z",
+      "dataCadastro": "2026-09-25T17:48:42.234Z",
       "id": 29
     },
     {
@@ -2710,7 +2842,7 @@
       "cargo": "CONFERENTE DE PRODUÇÃO",
       "local": "ITAMINAS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.779Z",
+      "dataCadastro": "2026-09-25T17:48:42.235Z",
       "id": 30
     },
     {
@@ -2720,7 +2852,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.780Z",
+      "dataCadastro": "2026-09-25T17:48:42.236Z",
       "id": 31
     },
     {
@@ -2730,7 +2862,7 @@
       "cargo": "ENCARREGADO",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.780Z",
+      "dataCadastro": "2026-09-25T17:48:42.236Z",
       "id": 32
     },
     {
@@ -2740,7 +2872,7 @@
       "cargo": "MECANICO",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.781Z",
+      "dataCadastro": "2026-09-25T17:48:42.237Z",
       "id": 33
     },
     {
@@ -2750,7 +2882,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.781Z",
+      "dataCadastro": "2026-09-25T17:48:42.237Z",
       "id": 34
     },
     {
@@ -2760,7 +2892,7 @@
       "cargo": "MANTENEDOR",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.782Z",
+      "dataCadastro": "2026-09-25T17:48:42.238Z",
       "id": 35
     },
     {
@@ -2770,7 +2902,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.782Z",
+      "dataCadastro": "2026-09-25T17:48:42.239Z",
       "id": 36
     },
     {
@@ -2780,7 +2912,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.783Z",
+      "dataCadastro": "2026-09-25T17:48:42.239Z",
       "id": 37
     },
     {
@@ -2790,7 +2922,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.783Z",
+      "dataCadastro": "2026-09-25T17:48:42.240Z",
       "id": 38
     },
     {
@@ -2800,7 +2932,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.784Z",
+      "dataCadastro": "2026-09-25T17:48:42.241Z",
       "id": 39
     },
     {
@@ -2810,7 +2942,7 @@
       "cargo": "SUPERVISOR",
       "local": "ADM",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.784Z",
+      "dataCadastro": "2026-09-25T17:48:42.241Z",
       "id": 40
     },
     {
@@ -2820,7 +2952,7 @@
       "cargo": "ENCARREGADO",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.785Z",
+      "dataCadastro": "2026-09-25T17:48:42.242Z",
       "id": 41
     },
     {
@@ -2830,7 +2962,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.785Z",
+      "dataCadastro": "2026-09-25T17:48:42.243Z",
       "id": 42
     },
     {
@@ -2840,7 +2972,7 @@
       "cargo": "MANTENEDOR",
       "local": "TCS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.786Z",
+      "dataCadastro": "2026-09-25T17:48:42.244Z",
       "id": 43
     },
     {
@@ -2850,7 +2982,7 @@
       "cargo": "MANTENEDOR",
       "local": "ITAMINAS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.786Z",
+      "dataCadastro": "2026-09-25T17:48:42.245Z",
       "id": 44
     },
     {
@@ -2860,7 +2992,7 @@
       "cargo": "MANTENEDOR",
       "local": "ITAMINAS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.786Z",
+      "dataCadastro": "2026-09-25T17:48:42.246Z",
       "id": 45
     },
     {
@@ -2870,7 +3002,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.787Z",
+      "dataCadastro": "2026-09-25T17:48:42.246Z",
       "id": 46
     },
     {
@@ -2880,7 +3012,7 @@
       "cargo": "MANTENEDOR",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.787Z",
+      "dataCadastro": "2026-09-25T17:48:42.247Z",
       "id": 47
     },
     {
@@ -2890,7 +3022,7 @@
       "cargo": "ENCARREGADO",
       "local": "TCS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.789Z",
+      "dataCadastro": "2026-09-25T17:48:42.247Z",
       "id": 48
     },
     {
@@ -2900,7 +3032,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.789Z",
+      "dataCadastro": "2026-09-25T17:48:42.248Z",
       "id": 49
     },
     {
@@ -2910,7 +3042,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.790Z",
+      "dataCadastro": "2026-09-25T17:48:42.248Z",
       "id": 50
     },
     {
@@ -2920,7 +3052,7 @@
       "cargo": "AUXILIAR ADMINISTRATIVO",
       "local": "ADM",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.790Z",
+      "dataCadastro": "2026-09-25T17:48:42.249Z",
       "id": 51
     },
     {
@@ -2930,7 +3062,7 @@
       "cargo": "ELETRICISTA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.791Z",
+      "dataCadastro": "2026-09-25T17:48:42.249Z",
       "id": 52
     },
     {
@@ -2940,7 +3072,7 @@
       "cargo": "MANTENEDOR",
       "local": "ITAMINAS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.792Z",
+      "dataCadastro": "2026-09-25T17:48:42.249Z",
       "id": 53
     },
     {
@@ -2950,7 +3082,7 @@
       "cargo": "MANTENEDOR",
       "local": "TCS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.792Z",
+      "dataCadastro": "2026-09-25T17:48:42.250Z",
       "id": 54
     },
     {
@@ -2960,7 +3092,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.792Z",
+      "dataCadastro": "2026-09-25T17:48:42.251Z",
       "id": 55
     },
     {
@@ -2970,7 +3102,7 @@
       "cargo": "MANTENEDOR",
       "local": "TCS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.793Z",
+      "dataCadastro": "2026-09-25T17:48:42.251Z",
       "id": 56
     },
     {
@@ -2980,7 +3112,7 @@
       "cargo": "JARDINEIRO",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.793Z",
+      "dataCadastro": "2026-09-25T17:48:42.252Z",
       "id": 57
     },
     {
@@ -2990,7 +3122,7 @@
       "cargo": "GERENTE ADMINISTRATIVO",
       "local": "ADM",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.794Z",
+      "dataCadastro": "2026-09-25T17:48:42.252Z",
       "id": 58
     },
     {
@@ -3000,7 +3132,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.794Z",
+      "dataCadastro": "2026-09-25T17:48:42.253Z",
       "id": 59
     },
     {
@@ -3010,7 +3142,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.794Z",
+      "dataCadastro": "2026-09-25T17:48:42.253Z",
       "id": 60
     },
     {
@@ -3020,7 +3152,7 @@
       "cargo": "MANTENEDOR",
       "local": "ITAMINAS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.795Z",
+      "dataCadastro": "2026-09-25T17:48:42.254Z",
       "id": 61
     },
     {
@@ -3030,7 +3162,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.795Z",
+      "dataCadastro": "2026-09-25T17:48:42.254Z",
       "id": 62
     },
     {
@@ -3040,7 +3172,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.796Z",
+      "dataCadastro": "2026-09-25T17:48:42.255Z",
       "id": 63
     },
     {
@@ -3050,7 +3182,7 @@
       "cargo": "OPERADOR DE MANTENEDOR",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.796Z",
+      "dataCadastro": "2026-09-25T17:48:42.255Z",
       "id": 64
     },
     {
@@ -3060,7 +3192,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.796Z",
+      "dataCadastro": "2026-09-25T17:48:42.255Z",
       "id": 65
     },
     {
@@ -3070,7 +3202,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.796Z",
+      "dataCadastro": "2026-09-25T17:48:42.256Z",
       "id": 66
     },
     {
@@ -3080,7 +3212,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.797Z",
+      "dataCadastro": "2026-09-25T17:48:42.256Z",
       "id": 67
     },
     {
@@ -3090,7 +3222,7 @@
       "cargo": "OPERADOR DE MAQUINAS",
       "local": "ITAMINAS",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.797Z",
+      "dataCadastro": "2026-09-25T17:48:42.257Z",
       "id": 68
     },
     {
@@ -3100,7 +3232,7 @@
       "cargo": "DIRETOR",
       "local": "ADM",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.797Z",
+      "dataCadastro": "2026-09-25T17:48:42.257Z",
       "id": 69
     },
     {
@@ -3110,7 +3242,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.798Z",
+      "dataCadastro": "2026-09-25T17:48:42.258Z",
       "id": 70
     },
     {
@@ -3120,7 +3252,7 @@
       "cargo": "AUXILIAR DE SERVICOS DE DESCARGA",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.798Z",
+      "dataCadastro": "2026-09-25T17:48:42.258Z",
       "id": 71
     },
     {
@@ -3130,7 +3262,7 @@
       "cargo": "OFICIAL",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.798Z",
+      "dataCadastro": "2026-09-25T17:48:42.259Z",
       "id": 72
     },
     {
@@ -3140,7 +3272,7 @@
       "cargo": "MECANICO",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.799Z",
+      "dataCadastro": "2026-09-25T17:48:42.259Z",
       "id": 73
     },
     {
@@ -3150,7 +3282,7 @@
       "cargo": "COORDENADOR",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.799Z",
+      "dataCadastro": "2026-09-25T17:48:42.260Z",
       "id": 74
     },
     {
@@ -3160,7 +3292,7 @@
       "cargo": "MOTORISTA DE CAMINHAO",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.799Z",
+      "dataCadastro": "2026-09-25T17:48:42.260Z",
       "id": 75
     },
     {
@@ -3170,7 +3302,7 @@
       "cargo": "SOLDADOR",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.800Z",
+      "dataCadastro": "2026-09-25T17:48:42.261Z",
       "id": 76
     },
     {
@@ -3180,7 +3312,7 @@
       "cargo": "SERVIÇOS GERAIS",
       "local": "CDA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.800Z",
+      "dataCadastro": "2026-09-25T17:48:42.261Z",
       "id": 77
     },
     {
@@ -3190,7 +3322,7 @@
       "cargo": "PEDREIRO",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.800Z",
+      "dataCadastro": "2026-09-25T17:48:42.262Z",
       "id": 78
     },
     {
@@ -3200,7 +3332,7 @@
       "cargo": "MOTORISTA",
       "local": "TSA",
       "ativo": true,
-      "dataCadastro": "2026-09-25T17:53:20.801Z",
+      "dataCadastro": "2026-09-25T17:48:42.263Z",
       "id": 79
     },
     {
