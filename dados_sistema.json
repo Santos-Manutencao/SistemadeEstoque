@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T17:26:08.542Z",
+  "ultimaAtualizacao": "2026-11-18T17:26:46.511Z",
   "ultimoAutorSessionId": "cli_mwmd5gsh_3ui90b",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
@@ -28,14 +28,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 30,
-      "estoqueAtual": 53,
+      "estoqueAtual": 28,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:37:24.586Z",
       "id": 10,
-      "dataAtualizacao": "2026-11-18T17:18:37.276Z"
+      "dataAtualizacao": "2026-11-18T17:26:41.713Z"
     },
     {
       "codigo": "EPI-003",
@@ -540,6 +540,28 @@
     }
   ],
   "movimentacoes": [
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-801711",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 25,
+      "valorUnitario": 5.9,
+      "valorTotal": 147.5,
+      "estoqueAnterior": 53,
+      "estoqueNovo": 28,
+      "dataHora": "2026-11-18T17:26",
+      "matriculaFuncionario": "550",
+      "nomeFuncionario": "TSA",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 126
+    },
     {
       "tipo": "ENTRADA",
       "subtipo": "COMPRA_REPOSICAO",
