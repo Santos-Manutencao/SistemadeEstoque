@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Santos Manutenções - Sistema de Controle de Estoque</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=2.2.0">
   <link rel="icon" type="image/jpeg" href="logo_santos.jpg">
 </head>
 <body>
@@ -921,7 +924,7 @@
         </h3>
         <button class="modal-close" onclick="App.fecharModal('modal-saida')">✕</button>
       </div>
-      <form id="form-saida">
+      <form id="form-saida" onsubmit="event.preventDefault(); return false;">
         <div class="modal-body">
 
           <!-- Bloco 1: Colaborador e Destino -->
@@ -1044,7 +1047,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="App.fecharModal('modal-saida')">Cancelar</button>
-          <button type="submit" class="btn btn-danger" id="btn-confirmar-saida">
+          <button type="button" class="btn btn-danger" id="btn-confirmar-saida" onclick="App.salvarSaida(event)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             Confirmar Retirada
           </button>
@@ -1142,10 +1145,10 @@
   <div id="print-area"></div>
 
   <!-- SCRIPTS -->
-  <script src="js/data_colaboradores.js"></script>
-  <script src="js/db.js"></script>
-  <script src="js/github_sync.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/data_colaboradores.js?v=2.2.0"></script>
+  <script src="js/db.js?v=2.2.0"></script>
+  <script src="js/github_sync.js?v=2.2.0"></script>
+  <script src="js/app.js?v=2.2.0"></script>
 
 </body>
 </html>

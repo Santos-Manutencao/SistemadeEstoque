@@ -1081,11 +1081,21 @@ App.salvarEntrada = async (e) => {
 App.itensRetirada = [];
 
 App.abrirModalSaida = () => {
-  document.getElementById('form-saida').reset();
-  document.getElementById('saida-data').value = new Date().toISOString().slice(0, 16);
+  App.salvandoSaida = false;
+  const btnConfirmar = document.getElementById('btn-confirmar-saida');
+  if (btnConfirmar) {
+    btnConfirmar.disabled = false;
+    btnConfirmar.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Confirmar Retirada`;
+  }
+  const form = document.getElementById('form-saida');
+  if (form) form.reset();
+  const dataInput = document.getElementById('saida-data');
+  if (dataInput) dataInput.value = new Date().toISOString().slice(0, 16);
   App.selectedEmployeeForExit = null;
-  document.getElementById('saida-emp-info').style.display = 'none';
-  document.getElementById('saida-unidade').value = '';
+  const empInfo = document.getElementById('saida-emp-info');
+  if (empInfo) empInfo.style.display = 'none';
+  const unidadeInput = document.getElementById('saida-unidade');
+  if (unidadeInput) unidadeInput.value = '';
   App.itensRetirada = [];
   App.renderizarItensRetirada();
   App.atualizarInfoProdutoSaida();
@@ -1158,7 +1168,7 @@ App.adicionarItemRetirada = () => {
   const p = App.produtos.find(x => x.id === prodId);
   if (!p) return false;
 
-  const jaAdicionado = (App.itensRetirada || []).filter(i => i.produtoId === prodId).reduce((sum, i) => sum + i.quantidade, 0);
+  const jaAdicionado = (App.itensRetirada || []).filter(i => Number(i.produtoId) === prodId).reduce((sum, i) => sum + i.quantidade, 0);
   const totalDesejado = jaAdicionado + quantidade;
 
   if (totalDesejado > p.estoqueAtual) {
@@ -1168,7 +1178,7 @@ App.adicionarItemRetirada = () => {
   }
 
   // Se já existir na lista, incrementa quantidade
-  const itemExistente = App.itensRetirada.find(i => i.produtoId === prodId);
+  const itemExistente = App.itensRetirada.find(i => Number(i.produtoId) === prodId);
   if (itemExistente) {
     itemExistente.quantidade = Math.round((itemExistente.quantidade + quantidade) * 100) / 100;
     itemExistente.valorTotal = itemExistente.quantidade * itemExistente.valorUnitario;
@@ -1296,6 +1306,7 @@ App.aoSelecionarFuncionarioRetirada = (termo) => {
 };
 
 App.salvandoSaida = false;
+App.ultimaSaidaTimestamp = 0;
 
 App.salvarSaida = async (e) => {
   if (e) {
@@ -1304,25 +1315,35 @@ App.salvarSaida = async (e) => {
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
   }
 
-  // Trava anti-duplo clique e anti-concorrência IMEDIATA (síncrona, antes de qualquer await)
+  const agora = Date.now();
+
+  // Trava 1: Bloqueio imediato síncrono antes de qualquer await
   if (App.salvandoSaida) {
-    console.warn('Bloqueio anti-duplicação: salvamento de saída já em processamento.');
+    console.warn('[ANTI-DUPLICAÇÃO] Bloqueio ativo: processo de saída já em andamento.');
     return;
   }
+
+  // Trava 2: Debounce temporal (impede cliques repetidos dentro de 3 segundos)
+  if (agora - App.ultimaSaidaTimestamp < 3000) {
+    console.warn('[ANTI-DUPLICAÇÃO] Bloqueio temporal: clique repetido dentro do intervalo de 3s.');
+    return;
+  }
+
   App.salvandoSaida = true;
+  App.ultimaSaidaTimestamp = agora;
 
   const btnConfirmar = document.getElementById('btn-confirmar-saida');
-  const txtOriginal = btnConfirmar ? btnConfirmar.innerText : 'Confirmar Retirada';
+  const txtOriginal = btnConfirmar ? btnConfirmar.innerHTML : 'Confirmar Retirada';
   if (btnConfirmar) {
     btnConfirmar.disabled = true;
-    btnConfirmar.innerText = 'Processando...';
+    btnConfirmar.innerHTML = 'Gravando Saída...';
   }
 
   const liberarTrava = () => {
     App.salvandoSaida = false;
     if (btnConfirmar) {
       btnConfirmar.disabled = false;
-      btnConfirmar.innerText = txtOriginal;
+      btnConfirmar.innerHTML = txtOriginal;
     }
   };
 
@@ -1345,11 +1366,11 @@ App.salvarSaida = async (e) => {
       return;
     }
 
-    const matriculaOuNome = document.getElementById('saida-funcionario-input').value.trim();
-    const unidadeDestino = document.getElementById('saida-unidade').value.trim().toUpperCase();
-    const motivo = document.getElementById('saida-motivo').value.trim();
+    const matriculaOuNome = (document.getElementById('saida-funcionario-input').value || '').trim();
+    const unidadeDestino = (document.getElementById('saida-unidade').value || '').trim().toUpperCase();
+    const motivo = (document.getElementById('saida-motivo').value || '').trim();
     const dataHora = document.getElementById('saida-data').value || new Date().toISOString();
-    const responsavel = document.getElementById('saida-responsavel').value.trim() || 'ALMOXARIFADO CENTRAL';
+    const responsavel = (document.getElementById('saida-responsavel').value || '').trim() || 'ALMOXARIFADO CENTRAL';
 
     if (!matriculaOuNome) {
       App.mostrarToast('Informe o colaborador responsável pela retirada do material.', 'warning');
@@ -1368,7 +1389,7 @@ App.salvarSaida = async (e) => {
     // Validação atualizada de estoque no banco de dados para todos os itens da retirada
     const produtosNoBanco = await window.db.getAll('produtos');
     for (const item of App.itensRetirada) {
-      const p = produtosNoBanco.find(x => x.id === item.produtoId);
+      const p = produtosNoBanco.find(x => Number(x.id) === Number(item.produtoId));
       if (!p) {
         App.mostrarToast(`Produto "${item.produtoNome}" não foi encontrado no banco de dados.`, 'danger');
         liberarTrava();
@@ -1389,25 +1410,55 @@ App.salvarSaida = async (e) => {
     };
 
     // Snapshot imediato e esvaziamento da lista para garantir que nenhuma reentrada processe os mesmos itens
-    const itensParaRetirar = [...App.itensRetirada];
+    const itensSnapshot = [...App.itensRetirada];
     App.itensRetirada = [];
     App.renderizarItensRetirada();
+
+    // Consolidação de segurança: agrupa itens pelo mesmo produtoId caso haja repetição na lista
+    const itensParaRetirar = [];
+    for (const it of itensSnapshot) {
+      const existente = itensParaRetirar.find(x => Number(x.produtoId) === Number(it.produtoId));
+      if (existente) {
+        existente.quantidade = Math.round((existente.quantidade + it.quantidade) * 100) / 100;
+        existente.valorTotal = Math.round((existente.quantidade * existente.valorUnitario) * 100) / 100;
+      } else {
+        itensParaRetirar.push({ ...it });
+      }
+    }
 
     // Código de transação unificado para agrupar todos os materiais na mesma Cautela de Retirada
     const transacaoId = 'RET-' + Date.now().toString().slice(-6);
 
-    // Salvaguarda no banco: evita duplicatas da mesma transação e produto
+    // Salvaguarda no banco: obtém histórico atualizado de movimentações
     const movsExistentes = await window.db.getAll('movimentacoes');
+    const quinzeSegundosAtras = new Date(Date.now() - 15000).toISOString();
 
-    // Deduz estoque e salva cada movimentação de saída
+    const itensEfetivamenteRetirados = [];
+
+    // Deduz estoque e salva cada movimentação de saída com validações anti-duplicação
     for (const item of itensParaRetirar) {
-      const jaGravado = movsExistentes.some(m => m.transacaoId === transacaoId && m.produtoId === item.produtoId);
-      if (jaGravado) {
-        console.warn(`Movimentação ${transacaoId} para ${item.produtoNome} já existe no banco. Pulando duplicação.`);
+      // Barreira 1: Mesmo transacaoId e mesmo produto
+      const jaGravadoNaTransacao = movsExistentes.some(m => m.transacaoId === transacaoId && Number(m.produtoId) === Number(item.produtoId));
+      if (jaGravadoNaTransacao) {
+        console.warn(`[ANTI-DUPLICAÇÃO] Transação ${transacaoId} para ${item.produtoNome} já existe. Pulando.`);
         continue;
       }
 
-      const p = App.produtos.find(x => x.id === item.produtoId) || produtosNoBanco.find(x => x.id === item.produtoId);
+      // Barreira 2: Janela deslizante de 15 segundos contra submissões paralelas ou duplos disparos do navegador
+      const duplicataRecente = movsExistentes.find(m =>
+        m.tipo === 'SAIDA' &&
+        Number(m.produtoId) === Number(item.produtoId) &&
+        Number(m.quantidade) === Number(item.quantidade) &&
+        (m.matriculaFuncionario === emp.matricula || m.nomeFuncionario === emp.nome) &&
+        m.unidadeDestino === unidadeDestino &&
+        m.dataHora >= quinzeSegundosAtras
+      );
+      if (duplicataRecente) {
+        console.warn(`[ANTI-DUPLICAÇÃO] Saída idêntica detectada nos últimos 15s (ID: ${duplicataRecente.id}, Cautela: ${duplicataRecente.transacaoId}). Bloqueando duplicação.`);
+        continue;
+      }
+
+      const p = App.produtos.find(x => Number(x.id) === Number(item.produtoId)) || produtosNoBanco.find(x => Number(x.id) === Number(item.produtoId));
       if (!p) continue;
 
       const estoqueAnterior = Number(p.estoqueAtual);
@@ -1419,7 +1470,7 @@ App.salvarSaida = async (e) => {
       await window.db.update('produtos', p);
 
       // Registra movimentação de saída vinculando o grupo/transação
-      await window.db.add('movimentacoes', {
+      const novoMov = {
         tipo: 'SAIDA',
         subtipo: 'RETIRADA_COLABORADOR',
         transacaoId,
@@ -1439,11 +1490,22 @@ App.salvarSaida = async (e) => {
         unidadeDestino,
         motivo: motivo || 'Retirada de Material para Operação / Manutenção',
         responsavel
-      });
+      };
+      await window.db.add('movimentacoes', novoMov);
+      movsExistentes.push(novoMov);
+      itensEfetivamenteRetirados.push(item);
     }
 
-    const totalPecas = itensParaRetirar.reduce((acc, i) => acc + i.quantidade, 0);
-    const qtdMateriais = itensParaRetirar.length;
+    if (itensEfetivamenteRetirados.length === 0) {
+      console.warn('[ANTI-DUPLICAÇÃO] Nenhum item novo foi gravado pois foram identificados como duplicação.');
+      App.mostrarToast('Esta retirada já havia sido processada. Operação duplicada evitada com sucesso.', 'info');
+      App.fecharModal('modal-saida');
+      liberarTrava();
+      return;
+    }
+
+    const totalPecas = itensEfetivamenteRetirados.reduce((acc, i) => acc + i.quantidade, 0);
+    const qtdMateriais = itensEfetivamenteRetirados.length;
 
     // Limpa o formulário de saída completamente
     const formSaida = document.getElementById('form-saida');
@@ -1469,11 +1531,7 @@ App.salvarSaida = async (e) => {
     console.error('Erro ao processar retirada de materiais:', err);
     App.mostrarToast('Erro ao processar retirada de materiais.', 'danger');
   } finally {
-    App.salvandoSaida = false;
-    if (btnConfirmar) {
-      btnConfirmar.disabled = false;
-      btnConfirmar.innerText = txtOriginal;
-    }
+    liberarTrava();
   }
 };
 
