@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T14:04:00.417Z",
+  "ultimaAtualizacao": "2026-11-18T16:31:12.350Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -27,14 +27,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 30,
-      "estoqueAtual": 28,
+      "estoqueAtual": 26,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:37:24.586Z",
       "id": 10,
-      "dataAtualizacao": "2026-11-18T11:41:53.278Z"
+      "dataAtualizacao": "2026-11-18T16:31:06.850Z"
     },
     {
       "codigo": "EPI-003",
@@ -2432,6 +2432,50 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 117
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-466849",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 1,
+      "valorUnitario": 5.9,
+      "valorTotal": 5.9,
+      "estoqueAnterior": 28,
+      "estoqueNovo": 27,
+      "dataHora": "2026-11-18T16:30",
+      "matriculaFuncionario": "130",
+      "nomeFuncionario": "ANGELICA APARECIDA DE OLIVEIRA",
+      "cargoFuncionario": "SERVIÇOS GERAIS",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 120
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-466850",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 1,
+      "valorUnitario": 5.9,
+      "valorTotal": 5.9,
+      "estoqueAnterior": 27,
+      "estoqueNovo": 26,
+      "dataHora": "2026-11-18T16:30",
+      "matriculaFuncionario": "130",
+      "nomeFuncionario": "ANGELICA APARECIDA DE OLIVEIRA",
+      "cargoFuncionario": "SERVIÇOS GERAIS",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 121
     }
   ],
   "colaboradores": [
