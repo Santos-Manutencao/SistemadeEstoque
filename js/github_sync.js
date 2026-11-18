@@ -1,8 +1,10 @@
 /**
  * ============================================================================
- * SANTOS MANUTENÇÕES - MÓDULO DE SINCRONIZAÇÃO EM NUVEM VIA GITHUB API
- * Permite que múltiplos computadores acessem e mantenham os mesmos dados
- * através do repositório GitHub (sem necessidade de servidores externos).
+ * SANTOS MANUTENÇÕES - MÓDULO DE SINCRONIZAÇÃO EM NUVEM MULTI-USUÁRIO (GITHUB API)
+ * Permite que múltiplos computadores acessem, atualizem e mantenham os mesmos dados
+ * em tempo real através do repositório GitHub (sem necessidade de servidores externos).
+ * Inclui: Polling automático em segundo plano, Reconciliação sem sobrescrita (Merge),
+ * e Invalidação total de cache.
  * ============================================================================
  */
 
@@ -13,9 +15,23 @@ const GitHubSync = {
   FILE_PATH: 'dados_sistema.json',
   TOKEN_KEY: 'santos_github_token',
   LAST_SYNC_KEY: 'santos_ultimo_sync_ts',
+  LAST_SHA_KEY: 'santos_ultimo_sha_aplicado',
+  LAST_TS_KEY: 'santos_ultimo_ts_aplicado',
   
   isSyncing: false,
   debounceTimer: null,
+  pollingTimer: null,
+  _eventosEscutados: false,
+
+  // Identificador único da aba/sessão atual para distinguir alterações próprias de alterações de outros computadores
+  CLIENT_ID: (() => {
+    let id = sessionStorage.getItem('santos_client_session_id');
+    if (!id) {
+      id = 'cli_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+      sessionStorage.setItem('santos_client_session_id', id);
+    }
+    return id;
+  })(),
 
   // Utilitários de codificação UTF-8 <-> Base64 seguros para acentos e caracteres especiais
   utf8ToBase64(str) {
@@ -79,7 +95,7 @@ const GitHubSync = {
       const horaStr = ultimo ? new Date(Number(ultimo)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
       textEl.innerText = horaStr ? `Nuvem GitHub ativa (${horaStr})` : 'Nuvem GitHub ativa';
       dotEl.style.backgroundColor = '#10b981';
-      badge.title = 'Conectado ao repositório GitHub. Alterações são enviadas automaticamente para a nuvem.';
+      badge.title = 'Conectado ao repositório GitHub. Sincronização automática em segundo plano ativada.';
     } else {
       textEl.innerText = 'Nuvem: Conectar GitHub';
       dotEl.style.backgroundColor = '#f59e0b';
@@ -89,46 +105,275 @@ const GitHubSync = {
 
   // =========================================================================
   // BAIXAR DADOS DO REPOSITÓRIO GITHUB (PULL)
-  // Como o repositório é público, qualquer computador lê sem precisar de token!
+  // Busca em tempo real via API do GitHub (sem cache Fastly)
   // =========================================================================
   async baixarDadosRemotos() {
-    try {
-      // 1. Tenta carregar direto do Raw GitHub com cache-buster (mais rápido e sem limite)
-      const rawUrl = `https://raw.githubusercontent.com/${this.OWNER}/${this.REPO}/${this.BRANCH}/${this.FILE_PATH}?nocache=${Date.now()}`;
-      const res = await fetch(rawUrl);
-      if (res.ok) {
-        const json = await res.json();
-        return json;
+    const token = this.obterToken();
+
+    // 1. Se possuir Token, consulta diretamente a API oficial do GitHub (tempo real 0s cache)
+    if (token) {
+      try {
+        const apiUrl = `https://api.github.com/repos/${this.OWNER}/${this.REPO}/contents/${this.FILE_PATH}?ref=${this.BRANCH}`;
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        };
+        const res = await fetch(apiUrl, { headers });
+        if (res.ok) {
+          const fileData = await res.json();
+          if (fileData && fileData.content) {
+            const parsed = JSON.parse(this.base64ToUtf8(fileData.content.replace(/\n/g, '')));
+            return {
+              dados: parsed,
+              sha: fileData.sha
+            };
+          }
+        }
+      } catch (errApi) {
+        console.warn('Falha na consulta direta via API do GitHub, tentando fallback...', errApi);
       }
-    } catch (errRaw) {
-      console.warn('Tentando fallback via API do GitHub...', errRaw);
     }
 
-    // 2. Fallback via GitHub Contents API
+    // 2. Fallback público via Raw GitHub com múltiplos cache-busters
     try {
-      const apiUrl = `https://api.github.com/repos/${this.OWNER}/${this.REPO}/contents/${this.FILE_PATH}`;
-      const headers = { 'Accept': 'application/vnd.github.v3+json' };
-      const token = this.obterToken();
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const resApi = await fetch(apiUrl, { headers });
-      if (resApi.ok) {
-        const fileData = await resApi.json();
-        if (fileData && fileData.content) {
-          const str = this.base64ToUtf8(fileData.content.replace(/\n/g, ''));
-          return JSON.parse(str);
-        }
+      const rawUrl = `https://raw.githubusercontent.com/${this.OWNER}/${this.REPO}/${this.BRANCH}/${this.FILE_PATH}?t=${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const res = await fetch(rawUrl, { cache: 'no-store' });
+      if (res.ok) {
+        const parsed = await res.json();
+        return {
+          dados: parsed,
+          sha: null
+        };
       }
-    } catch (errApi) {
-      console.error('Erro ao buscar dados via API do GitHub:', errApi);
+    } catch (errRaw) {
+      console.error('Erro ao baixar dados brutos da nuvem:', errRaw);
     }
 
     return null;
   },
 
   // =========================================================================
-  // ENVIAR DADOS LOCAIS PARA O GITHUB (PUSH)
-  // Requer token com permissão de escrita no repositório
+  // MOTOR DE RECONCILIAÇÃO INTELIGENTE (3-WAY MERGE)
+  // Garante que NENHUM dado cadastrado no Computador A seja apagado pelo Computador B!
+  // =========================================================================
+  reconciliarDados(dadosLocais, dadosRemotos) {
+    if (!dadosRemotos) return dadosLocais;
+    if (!dadosLocais) return dadosRemotos;
+
+    // 1. RECONCILIAÇÃO DE COLABORADORES (União de matrículas)
+    const colabsMap = new Map();
+    (dadosRemotos.colaboradores || []).forEach(c => {
+      if (c && c.matricula) colabsMap.set(String(c.matricula), c);
+    });
+    (dadosLocais.colaboradores || []).forEach(c => {
+      if (c && c.matricula && !colabsMap.has(String(c.matricula))) {
+        colabsMap.set(String(c.matricula), c);
+      }
+    });
+    const colabsConsolidados = Array.from(colabsMap.values());
+
+    // 2. RECONCILIAÇÃO DE MOVIMENTAÇÕES (União total de histórico)
+    // Movimentações são registros permanentes: nunca descarta movimentação registrada em qualquer computador!
+    const movsMap = new Map();
+    const gerarChaveMov = (m) => {
+      if (m.id) return `id_${m.id}`;
+      return `${m.tipo}_${m.transacaoId || ''}_${m.produtoId}_${m.quantidade}_${m.dataHora}`;
+    };
+
+    (dadosRemotos.movimentacoes || []).forEach(m => {
+      if (m) movsMap.set(gerarChaveMov(m), m);
+    });
+    (dadosLocais.movimentacoes || []).forEach(m => {
+      if (m) {
+        const k = gerarChaveMov(m);
+        if (!movsMap.has(k)) {
+          movsMap.set(k, m);
+        }
+      }
+    });
+    const movsConsolidadas = Array.from(movsMap.values()).sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+
+    // 3. RECONCILIAÇÃO DE PRODUTOS
+    // Atualiza saldos respeitando a modificação mais recente (dataAtualizacao)
+    const prodsMap = new Map();
+    (dadosRemotos.produtos || []).forEach(p => {
+      if (p && p.id) prodsMap.set(Number(p.id), { ...p });
+    });
+
+    (dadosLocais.produtos || []).forEach(pLocal => {
+      if (!pLocal || !pLocal.id) return;
+      const id = Number(pLocal.id);
+      const pRemoto = prodsMap.get(id);
+
+      if (!pRemoto) {
+        // Novo produto cadastrado neste computador que ainda não estava na nuvem
+        prodsMap.set(id, { ...pLocal });
+      } else {
+        const tsLocal = pLocal.dataAtualizacao ? new Date(pLocal.dataAtualizacao).getTime() : 0;
+        const tsRemoto = pRemoto.dataAtualizacao ? new Date(pRemoto.dataAtualizacao).getTime() : 0;
+
+        // Se a alteração local for mais recente (ex: usuário realizou uma saída/entrada agora)
+        if (tsLocal > tsRemoto) {
+          prodsMap.set(id, { ...pLocal });
+        } else {
+          // A nuvem tem a versão mais recente deste produto
+          prodsMap.set(id, { ...pRemoto });
+        }
+      }
+    });
+
+    const prodsConsolidados = Array.from(prodsMap.values()).sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+
+    return {
+      produtos: prodsConsolidados,
+      movimentacoes: movsConsolidadas,
+      colaboradores: colabsConsolidados
+    };
+  },
+
+  // =========================================================================
+  // APLICAR DADOS NO BANCO LOCAL (INDEXEDDB)
+  // =========================================================================
+  async aplicarDadosNaBaseLocal(dadosRemotos, shaRemoto = null) {
+    if (!dadosRemotos || !Array.isArray(dadosRemotos.produtos)) return;
+
+    const prodsLocais = await window.db.getAll('produtos');
+    const movsLocais = await window.db.getAll('movimentacoes');
+    const colabsLocais = await window.db.getAll('colaboradores');
+
+    const reconciliado = this.reconciliarDados({
+      produtos: prodsLocais,
+      movimentacoes: movsLocais,
+      colaboradores: colabsLocais
+    }, dadosRemotos);
+
+    // Substitui produtos consolidados
+    await window.db.clearStore('produtos');
+    for (const p of reconciliado.produtos) {
+      await window.db.add('produtos', p);
+    }
+
+    // Substitui movimentações consolidadas
+    await window.db.clearStore('movimentacoes');
+    for (const m of reconciliado.movimentacoes) {
+      await window.db.add('movimentacoes', m);
+    }
+
+    // Substitui colaboradores consolidados
+    await window.db.clearStore('colaboradores');
+    for (const c of reconciliado.colaboradores) {
+      await window.db.add('colaboradores', c);
+    }
+
+    // Atualiza controles de sincronização
+    const tsRemoto = dadosRemotos.ultimaAtualizacao ? new Date(dadosRemotos.ultimaAtualizacao).getTime() : Date.now();
+    localStorage.setItem(this.LAST_SYNC_KEY, String(Date.now()));
+    localStorage.setItem(this.LAST_TS_KEY, String(tsRemoto));
+    if (shaRemoto) localStorage.setItem(this.LAST_SHA_KEY, shaRemoto);
+
+    this.atualizarIndicadorUI('ok');
+  },
+
+  // =========================================================================
+  // POLLING AUTOMÁTICO EM SEGUNDO PLANO (A CADA 8 SEGUNDOS & ON FOCUS)
+  // Verifica alterações feitas por outros computadores sem incomodar o usuário
+  // =========================================================================
+  iniciarPollingAutomatico() {
+    if (this.pollingTimer) clearInterval(this.pollingTimer);
+
+    // Checa a cada 8 segundos
+    this.pollingTimer = setInterval(() => {
+      this.verificarAtualizacoesSilencioso();
+    }, 8000);
+
+    // Checa imediatamente ao alternar de aba ou focar na janela
+    if (!this._eventosEscutados) {
+      this._eventosEscutados = true;
+      window.addEventListener('focus', () => {
+        this.verificarAtualizacoesSilencioso();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.verificarAtualizacoesSilencioso();
+        }
+      });
+    }
+  },
+
+  async verificarAtualizacoesSilencioso() {
+    // Não executa polling se estiver no meio de um envio
+    if (this.isSyncing) return;
+
+    try {
+      const token = this.obterToken();
+      let shaRemoto = null;
+      let dadosRemotos = null;
+
+      if (token) {
+        const apiUrl = `https://api.github.com/repos/${this.OWNER}/${this.REPO}/contents/${this.FILE_PATH}?ref=${this.BRANCH}`;
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        };
+
+        const res = await fetch(apiUrl, { headers });
+        if (res.ok) {
+          const fileData = await res.json();
+          shaRemoto = fileData.sha;
+          const ultimoSha = localStorage.getItem(this.LAST_SHA_KEY);
+
+          // Se o SHA é idêntico ao já aplicado localmente, não há novidades na nuvem
+          if (shaRemoto && shaRemoto === ultimoSha) {
+            return;
+          }
+
+          if (fileData.content) {
+            dadosRemotos = JSON.parse(this.base64ToUtf8(fileData.content.replace(/\n/g, '')));
+          }
+        }
+      } else {
+        const resRemoto = await this.baixarDadosRemotos();
+        if (resRemoto) {
+          dadosRemotos = resRemoto.dados;
+          shaRemoto = resRemoto.sha;
+        }
+      }
+
+      if (!dadosRemotos) return;
+
+      // Se a última gravação foi originada por esta MESMA aba/sessão, não precisa reprocessar
+      if (dadosRemotos.ultimoAutorSessionId === this.CLIENT_ID) {
+        if (shaRemoto) localStorage.setItem(this.LAST_SHA_KEY, shaRemoto);
+        return;
+      }
+
+      const tsRemoto = dadosRemotos.ultimaAtualizacao ? new Date(dadosRemotos.ultimaAtualizacao).getTime() : 0;
+      const ultimoTsAplicado = Number(localStorage.getItem(this.LAST_TS_KEY) || 0);
+      const ultimoShaAplicado = localStorage.getItem(this.LAST_SHA_KEY);
+
+      // Se há um novo SHA ou timestamp mais recente que o aplicado
+      if ((shaRemoto && shaRemoto !== ultimoShaAplicado) || tsRemoto > ultimoTsAplicado) {
+        console.log('🔄 [AUTO-SYNC] Atualização detectada de outro computador. Sincronizando automaticamente...');
+        await this.aplicarDadosNaBaseLocal(dadosRemotos, shaRemoto);
+
+        if (window.App) {
+          await window.App.carregarDados();
+          window.App.renderizarTudo();
+
+          // Atualiza visualmente o indicador
+          this.atualizarIndicadorUI('ok');
+          if (window.App.mostrarToast) {
+            window.App.mostrarToast('Dados de estoque sincronizados automaticamente com a nuvem.', 'info');
+          }
+        }
+      }
+    } catch (err) {
+      console.debug('Background poll skip:', err.message);
+    }
+  },
+
+  // =========================================================================
+  // ENVIAR DADOS LOCAIS PARA O GITHUB (PUSH SEGURO COM MERGE)
   // =========================================================================
   async enviarDadosParaGitHub(dadosCompletos, motivoCommit = '') {
     const token = this.obterToken();
@@ -136,81 +381,117 @@ const GitHubSync = {
       throw new Error('Token do GitHub não configurado neste computador.');
     }
 
-    this.atualizarIndicadorUI('sincronizando', 'Gravando no GitHub...');
+    this.isSyncing = true;
+    this.atualizarIndicadorUI('sincronizando', 'Gravando na nuvem...');
 
-    // 1. Busca o SHA atual do arquivo no repositório
-    let shaAtual = null;
-    const apiUrl = `https://api.github.com/repos/${this.OWNER}/${this.REPO}/contents/${this.FILE_PATH}`;
     try {
-      const getRes = await fetch(apiUrl, {
+      const apiUrl = `https://api.github.com/repos/${this.OWNER}/${this.REPO}/contents/${this.FILE_PATH}`;
+
+      // 1. Busca os dados atuais do repositório para mesclar e evitar sobrescrita
+      let shaAtual = null;
+      let dadosRemotos = null;
+
+      try {
+        const getRes = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (getRes.ok) {
+          const fileInfo = await getRes.json();
+          shaAtual = fileInfo.sha;
+          if (fileInfo.content) {
+            dadosRemotos = JSON.parse(this.base64ToUtf8(fileInfo.content.replace(/\n/g, '')));
+          }
+        }
+      } catch (e) {
+        console.warn('Não foi possível obter dados prévios da nuvem:', e);
+      }
+
+      // 2. Reconcilia os dados locais com os dados remotos
+      const reconciliado = this.reconciliarDados(dadosCompletos, dadosRemotos);
+
+      // Atualiza banco local com o estado consolidado
+      await window.db.clearStore('produtos');
+      for (const p of reconciliado.produtos) await window.db.add('produtos', p);
+
+      await window.db.clearStore('movimentacoes');
+      for (const m of reconciliado.movimentacoes) await window.db.add('movimentacoes', m);
+
+      await window.db.clearStore('colaboradores');
+      for (const c of reconciliado.colaboradores) await window.db.add('colaboradores', c);
+
+      if (window.App) {
+        window.App.produtos = reconciliado.produtos;
+        window.App.movimentacoes = reconciliado.movimentacoes;
+        window.App.colaboradores = reconciliado.colaboradores;
+      }
+
+      // 3. Monta o pacote de dados com o carimbo deste cliente
+      const agoraIso = new Date().toISOString();
+      const pacote = {
+        versao: '1.0',
+        ultimaAtualizacao: agoraIso,
+        ultimoAutorSessionId: this.CLIENT_ID,
+        dispositivoOrigem: (window.navigator.userAgent || '').slice(0, 50),
+        usuario: (window.App && window.App.usuarioLogado) ? window.App.usuarioLogado.usuario : 'Admin',
+        produtos: reconciliado.produtos,
+        movimentacoes: reconciliado.movimentacoes,
+        colaboradores: reconciliado.colaboradores
+      };
+
+      const jsonFormatado = JSON.stringify(pacote, null, 2);
+      const conteudoBase64 = this.utf8ToBase64(jsonFormatado);
+
+      const bodyPayload = {
+        message: motivoCommit || `Atualização automática de estoque: ${new Date().toLocaleString('pt-BR')}`,
+        content: conteudoBase64,
+        branch: this.BRANCH
+      };
+      if (shaAtual) bodyPayload.sha = shaAtual;
+
+      // 4. Grava no GitHub
+      const putRes = await fetch(apiUrl, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
           'Accept': 'application/vnd.github.v3+json'
-        }
+        },
+        body: JSON.stringify(bodyPayload)
       });
-      if (getRes.ok) {
-        const fileInfo = await getRes.json();
-        shaAtual = fileInfo.sha;
+
+      if (!putRes.ok) {
+        if (putRes.status === 409) {
+          console.warn('Conflito 409 no GitHub (edição concorrente). Re-sincronizando e reenviando...');
+          // Aguarda 1 segundo e re-tenta com os dados atualizados
+          await new Promise(r => setTimeout(r, 1000));
+          this.isSyncing = false;
+          return this.enviarDadosParaGitHub(reconciliado, motivoCommit);
+        }
+        const errJson = await putRes.json().catch(() => ({}));
+        throw new Error(errJson.message || `Erro HTTP ${putRes.status}`);
       }
-    } catch (e) {
-      console.warn('Não foi possível obter SHA prévio (arquivo pode ser novo):', e);
+
+      const putData = await putRes.json();
+      const novoSha = (putData.content && putData.content.sha) || null;
+      if (novoSha) localStorage.setItem(this.LAST_SHA_KEY, novoSha);
+
+      const tsEnvio = new Date(agoraIso).getTime();
+      localStorage.setItem(this.LAST_TS_KEY, String(tsEnvio));
+      localStorage.setItem(this.LAST_SYNC_KEY, String(Date.now()));
+
+      this.atualizarIndicadorUI('ok');
+      return true;
+
+    } finally {
+      this.isSyncing = false;
     }
-
-    // 2. Prepara o pacote de dados com metadados de sincronização
-    const pacote = {
-      versao: '1.0',
-      ultimaAtualizacao: new Date().toISOString(),
-      dispositivoOrigem: window.navigator.userAgent.slice(0, 50),
-      usuario: (window.App && window.App.usuarioLogado) ? window.App.usuarioLogado.usuario : 'Admin',
-      produtos: dadosCompletos.produtos || [],
-      movimentacoes: dadosCompletos.movimentacoes || [],
-      colaboradores: dadosCompletos.colaboradores || []
-    };
-
-    const jsonFormatado = JSON.stringify(pacote, null, 2);
-    const conteudoBase64 = this.utf8ToBase64(jsonFormatado);
-
-    const bodyPayload = {
-      message: motivoCommit || `Atualização automática de estoque: ${new Date().toLocaleString('pt-BR')}`,
-      content: conteudoBase64,
-      branch: this.BRANCH
-    };
-    if (shaAtual) {
-      bodyPayload.sha = shaAtual;
-    }
-
-    // 3. Envia o PUT para gravar o commit no repositório
-    const putRes = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify(bodyPayload)
-    });
-
-    if (!putRes.ok) {
-      const errJson = await putRes.json().catch(() => ({}));
-      const msgErro = errJson.message || `Erro HTTP ${putRes.status}`;
-      if (putRes.status === 401) {
-        throw new Error('Token do GitHub inválido ou expirado. Verifique o token nas configurações.');
-      } else if (putRes.status === 404) {
-        throw new Error('Repositório não encontrado ou o token não possui permissão de escrita.');
-      } else if (putRes.status === 409) {
-        throw new Error('Conflito de versão no GitHub. Tente baixar os dados da nuvem primeiro.');
-      }
-      throw new Error(`Falha ao gravar no GitHub: ${msgErro}`);
-    }
-
-    localStorage.setItem(this.LAST_SYNC_KEY, String(Date.now()));
-    this.atualizarIndicadorUI();
-    return true;
   },
 
   // =========================================================================
-  // SINCRONIZAÇÃO INTELIGENTE (PULL OU PUSH AUTOMÁTICO)
-  // Executa na inicialização do sistema e ao clicar em "Sincronizar"
+  // SINCRONIZAÇÃO INTELIGENTE (PULL OU PUSH MANUAL / INICIAL)
   // =========================================================================
   async sincronizar(notificar = false) {
     if (this.isSyncing) return;
@@ -218,41 +499,25 @@ const GitHubSync = {
     this.atualizarIndicadorUI('sincronizando');
 
     try {
-      // 1. Busca o que está na nuvem
-      const dadosRemotos = await this.baixarDadosRemotos();
-      const produtosLocais = await window.db.getAll('produtos');
-      const movsLocais = await window.db.getAll('movimentacoes');
+      const resRemoto = await this.baixarDadosRemotos();
+      const dadosRemotos = resRemoto ? resRemoto.dados : null;
+      const shaRemoto = resRemoto ? resRemoto.sha : null;
 
+      const produtosLocais = await window.db.getAll('produtos');
       const temRemoto = dadosRemotos && Array.isArray(dadosRemotos.produtos) && dadosRemotos.produtos.length > 0;
       const temLocal = produtosLocais && produtosLocais.length > 0;
 
-      // CENÁRIO A: Nuvem possui produtos e o computador local está vazio ou desatualizado
       if (temRemoto) {
-        const tsRemoto = dadosRemotos.ultimaAtualizacao ? new Date(dadosRemotos.ultimaAtualizacao).getTime() : 0;
-        const tsUltimoSyncLocal = Number(localStorage.getItem(this.LAST_SYNC_KEY) || 0);
-
-        // Se local não tem produtos ou se o remoto é mais novo que a última sincronização conhecida
-        if (!temLocal || tsRemoto > tsUltimoSyncLocal) {
-          console.log('🔄 Atualizando dados locais a partir da nuvem GitHub...');
-          await this.aplicarDadosNaBaseLocal(dadosRemotos);
-          localStorage.setItem(this.LAST_SYNC_KEY, String(Math.max(tsRemoto, Date.now())));
-          this.atualizarIndicadorUI();
-
-          if (window.App) {
-            await window.App.carregarDados();
-            window.App.renderizarTudo();
-            if (notificar) {
-              window.App.mostrarToast(`Dados da nuvem sincronizados com sucesso! (${dadosRemotos.produtos.length} produtos carregados)`, 'success');
-            }
+        await this.aplicarDadosNaBaseLocal(dadosRemotos, shaRemoto);
+        if (window.App) {
+          await window.App.carregarDados();
+          window.App.renderizarTudo();
+          if (notificar) {
+            window.App.mostrarToast(`Sincronização concluída com sucesso! (${dadosRemotos.produtos.length} produtos carregados)`, 'success');
           }
-          this.isSyncing = false;
-          return;
         }
-      }
-
-      // CENÁRIO B: Computador local tem produtos cadastrados, a nuvem está vazia e temos token para gravar
-      if (temLocal && !temRemoto && this.estaConectado()) {
-        console.log('📤 Nuvem está vazia. Enviando dados deste computador para o GitHub...');
+      } else if (temLocal && !temRemoto && this.estaConectado()) {
+        const movsLocais = await window.db.getAll('movimentacoes');
         const colabsLocais = await window.db.getAll('colaboradores');
         await this.enviarDadosParaGitHub({
           produtos: produtosLocais,
@@ -261,18 +526,18 @@ const GitHubSync = {
         }, 'Envio inicial de dados do estoque para o repositório');
 
         if (window.App && notificar) {
-          window.App.mostrarToast('Seus produtos locais foram enviados com sucesso para a nuvem do GitHub!', 'success');
+          window.App.mostrarToast('Produtos locais enviados com sucesso para a nuvem do GitHub!', 'success');
         }
       } else {
         localStorage.setItem(this.LAST_SYNC_KEY, String(Date.now()));
-        this.atualizarIndicadorUI();
+        this.atualizarIndicadorUI('ok');
         if (window.App && notificar) {
           window.App.mostrarToast('Sistema já está atualizado com a nuvem.', 'info');
         }
       }
 
     } catch (err) {
-      console.error('Erro durante processo de sincronização:', err);
+      console.error('Erro durante sincronização:', err);
       this.atualizarIndicadorUI();
       if (window.App && notificar) {
         window.App.mostrarToast(`Erro ao sincronizar com GitHub: ${err.message}`, 'danger');
@@ -282,44 +547,13 @@ const GitHubSync = {
     }
   },
 
-  // Aplica dados vindos do GitHub no banco local (IndexedDB + LocalStorage)
-  async aplicarDadosNaBaseLocal(dados) {
-    if (!dados || !dados.produtos) return;
-
-    // Substitui produtos
-    await window.db.clearStore('produtos');
-    for (const p of dados.produtos) {
-      await window.db.add('produtos', p);
-    }
-
-    // Substitui movimentações
-    if (Array.isArray(dados.movimentacoes)) {
-      await window.db.clearStore('movimentacoes');
-      for (const m of dados.movimentacoes) {
-        await window.db.add('movimentacoes', m);
-      }
-    }
-
-    // Mescla colaboradores caso existam novos cadastrados
-    if (Array.isArray(dados.colaboradores) && dados.colaboradores.length > 0) {
-      const colabsAtuais = await window.db.getAll('colaboradores');
-      const matriculasExistentes = new Set(colabsAtuais.map(c => c.matricula));
-      for (const c of dados.colaboradores) {
-        if (!matriculasExistentes.has(c.matricula)) {
-          await window.db.add('colaboradores', c);
-        }
-      }
-    }
-  },
-
-  // Agenda envio automático debounced para o GitHub sempre que houver alteração
+  // Agenda envio automático debounced para o GitHub sempre que houver alteração local
   agendarEnvioAutomatico() {
     if (!this.estaConectado()) return;
 
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(async () => {
       try {
-        console.log('☁️ Auto-sync: Gravando alterações no repositório GitHub...');
         const prods = await window.db.getAll('produtos');
         const movs = await window.db.getAll('movimentacoes');
         const colabs = await window.db.getAll('colaboradores');
@@ -330,9 +564,9 @@ const GitHubSync = {
           colaboradores: colabs
         }, `Auto-sync: estoque atualizado (${new Date().toLocaleTimeString('pt-BR')})`);
       } catch (err) {
-        console.warn('Auto-sync GitHub em segundo plano não pôde ser concluído:', err.message);
+        console.warn('Auto-sync em segundo plano:', err.message);
       }
-    }, 4000); // 4 segundos de debounce para evitar commits excessivos
+    }, 2000); // 2 segundos de debounce para resposta rápida entre computadores
   },
 
   // =========================================================================
@@ -352,10 +586,10 @@ const GitHubSync = {
     const statusTexto = document.getElementById('cloud-modal-status-text');
     if (statusTexto) {
       if (tokenAtual) {
-        statusTexto.innerHTML = '🟢 <strong>Conectado ao repositório:</strong> Qualquer computador que usar este sistema receberá as alterações em nuvem.';
+        statusTexto.innerHTML = '🟢 <strong>Conectado e Ativo em Tempo Real:</strong> As alterações são sincronizadas automaticamente entre computadores em segundo plano a cada poucos segundos.';
         statusTexto.style.color = '#10b981';
       } else {
-        statusTexto.innerHTML = '🟡 <strong>Modo Somente Leitura / Local:</strong> Este computador baixa dados públicos da nuvem. Para enviar novos cadastros e sincronizar alterações com outros computadores, insira um Token do GitHub abaixo.';
+        statusTexto.innerHTML = '🟡 <strong>Modo Somente Leitura / Local:</strong> Para que este computador envie alterações e receba atualizações em tempo real dos outros usuários, conecte um Token do GitHub abaixo.';
         statusTexto.style.color = '#f59e0b';
       }
     }
@@ -385,7 +619,6 @@ const GitHubSync = {
     }
 
     try {
-      // Testa se o token é válido chamando a API de usuário do GitHub
       const res = await fetch('https://api.github.com/user', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -401,8 +634,8 @@ const GitHubSync = {
         window.App.mostrarToast(`Token validado com sucesso! Conectado como: ${userData.login}`, 'success');
       }
 
-      // Dispara sincronização inicial com a nuvem
       await this.sincronizar(true);
+      this.iniciarPollingAutomatico();
       this.abrirModalConfiguracao();
 
     } catch (err) {
@@ -424,9 +657,9 @@ const GitHubSync = {
     }
 
     const confirmar = confirm(
-      'Deseja enviar TODOS os dados cadastrados neste computador para o repositório GitHub?\n\n' +
-      '• Os produtos e movimentações deste computador se tornarão a versão oficial na nuvem.\n' +
-      '• Todos os outros computadores que abrirem o sistema verão estes dados.'
+      'Deseja sincronizar e enviar os dados deste computador para o GitHub?\n\n' +
+      '• O sistema irá mesclar os dados locais com a nuvem com segurança.\n' +
+      '• Os outros computadores receberão as atualizações automaticamente em segundos.'
     );
     if (!confirmar) return;
 
@@ -448,7 +681,7 @@ const GitHubSync = {
       }, `Upload manual de sincronização: ${prods.length} produtos enviados`);
 
       if (window.App) {
-        window.App.mostrarToast(`Sucesso! ${prods.length} produto(s) enviados para a nuvem do GitHub!`, 'success');
+        window.App.mostrarToast(`Sucesso! Estoque sincronizado com a nuvem do GitHub!`, 'success');
         window.App.fecharModal('modal-cloud-sync');
       }
     } catch (err) {
@@ -456,7 +689,7 @@ const GitHubSync = {
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.innerText = '📤 Enviar Dados Deste Computador para Nuvem';
+        btn.innerText = '📤 Enviar / Sincronizar com a Nuvem';
       }
     }
   },
@@ -465,7 +698,7 @@ const GitHubSync = {
     const confirmar = confirm(
       'Deseja baixar os dados da nuvem do GitHub agora?\n\n' +
       '• O sistema irá puxar os produtos e movimentações mais recentes gravados na nuvem.\n' +
-      '• Isto é ideal para carregar neste computador os produtos cadastrados em outro computador.'
+      '• Suas informações locais serão mescladas com segurança.'
     );
     if (!confirmar) return;
 
@@ -476,20 +709,8 @@ const GitHubSync = {
     }
 
     try {
-      const remotos = await this.baixarDadosRemotos();
-      if (!remotos || !remotos.produtos || remotos.produtos.length === 0) {
-        if (window.App) window.App.mostrarToast('A nuvem ainda não possui produtos salvos. Faça o envio a partir do computador onde você realizou os cadastros.', 'info');
-        return;
-      }
-
-      await this.aplicarDadosNaBaseLocal(remotos);
-      localStorage.setItem(this.LAST_SYNC_KEY, String(Date.now()));
-      this.atualizarIndicadorUI();
-
+      await this.sincronizar(true);
       if (window.App) {
-        await window.App.carregarDados();
-        window.App.renderizarTudo();
-        window.App.mostrarToast(`Sucesso! ${remotos.produtos.length} produto(s) carregados da nuvem!`, 'success');
         window.App.fecharModal('modal-cloud-sync');
       }
     } catch (err) {
@@ -521,13 +742,14 @@ const GitHubSync = {
 
             <!-- Como funciona -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
-              <h4 style="font-size: 0.92rem; margin-bottom: 0.5rem; color: var(--text-main);">Como funciona a sincronização entre computadores:</h4>
+              <h4 style="font-size: 0.92rem; margin-bottom: 0.5rem; color: var(--text-main);">Como funciona a sincronização automática em tempo real:</h4>
               <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.5rem;">
-                O sistema utiliza o próprio repositório GitHub (<code>Santos-Manutencao/SistemadeEstoque</code>) como banco em nuvem.
+                O sistema utiliza o repositório GitHub como base de dados em nuvem, atualizando automaticamente ambos os computadores:
               </p>
               <ul style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6; padding-left: 1.25rem; margin: 0;">
-                <li><strong>No computador onde você já cadastrou os produtos:</strong> conecte o Token e clique em <em>"Enviar Dados Deste Computador para Nuvem"</em>.</li>
-                <li><strong>Em qualquer outro computador:</strong> ao abrir o sistema, ele já baixa e exibe os produtos automaticamente! Com o Token conectado, qualquer alteração futura também é enviada para a nuvem em tempo real.</li>
+                <li><strong>Atualização Automática Contínua:</strong> A cada poucos segundos, o sistema verifica a nuvem em segundo plano. Quando um usuário faz uma retirada, entrada ou cadastro, o outro computador recebe e atualiza a tela automaticamente!</li>
+                <li><strong>Reconciliação Segura:</strong> Operações feitas simultaneamente em computadores diferentes são mescladas sem sobrescrever ou apagar dados.</li>
+                <li><strong>Token do GitHub:</strong> Mantenha o token conectado em ambos os computadores para que ambos possam enviar e receber dados automaticamente.</li>
               </ul>
             </div>
 
@@ -546,7 +768,7 @@ const GitHubSync = {
                   Validar & Conectar Token
                 </button>
                 <a href="https://github.com/settings/tokens/new?scopes=repo&description=SistemadeEstoque_Sincronizacao" target="_blank" class="btn btn-outline btn-sm" style="text-decoration: none;">
-                  🔑 Gerar Novo Token no GitHub (1 Clique) ↗
+                  🔑 Gerar Novo Token no GitHub ↗
                 </a>
                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="GitHubSync.removerToken(); GitHubSync.abrirModalConfiguracao();">
                   Desconectar Token
@@ -558,7 +780,7 @@ const GitHubSync = {
             <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
               <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                 <button type="button" class="btn btn-success" id="btn-forcar-envio" onclick="GitHubSync.forcarEnvioLocal()" style="flex: 1; min-width: 250px;">
-                  📤 Enviar Dados Deste Computador para Nuvem
+                  📤 Enviar / Sincronizar com a Nuvem
                 </button>
                 <button type="button" class="btn btn-outline" id="btn-forcar-baixar" onclick="GitHubSync.forcarBaixarNuvem()" style="flex: 1; min-width: 250px;">
                   📥 Baixar Dados da Nuvem para Este Computador

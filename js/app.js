@@ -203,11 +203,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       App.mostrarToast('Sistema Santos Manutenções carregado com sucesso!', 'success');
     }
 
-    // 3. Inicializa sincronização em nuvem via GitHub
+    // 3. Inicializa sincronização em nuvem via GitHub com Polling contínuo em segundo plano
     if (window.GitHubSync) {
       window.GitHubSync.atualizarIndicadorUI();
       // Sincroniza em segundo plano (baixa dados mais recentes da nuvem se existirem)
       window.GitHubSync.sincronizar(false);
+      window.GitHubSync.iniciarPollingAutomatico();
     }
   } catch (err) {
     console.error('Erro ao inicializar banco de dados:', err);
@@ -969,6 +970,9 @@ App.ampliarFoto = (src, title) => {
    MOVIMENTAÇÕES (ENTRADA & RETIRADA / SAÍDA)
    ========================================================================== */
 App.abrirModalEntrada = () => {
+  if (window.GitHubSync && window.GitHubSync.verificarAtualizacoesSilencioso) {
+    window.GitHubSync.verificarAtualizacoesSilencioso();
+  }
   document.getElementById('form-entrada').reset();
   document.getElementById('entrada-data').value = new Date().toISOString().slice(0, 16);
   App.atualizarInfoProdutoEntrada();
@@ -1081,6 +1085,9 @@ App.salvarEntrada = async (e) => {
 App.itensRetirada = [];
 
 App.abrirModalSaida = () => {
+  if (window.GitHubSync && window.GitHubSync.verificarAtualizacoesSilencioso) {
+    window.GitHubSync.verificarAtualizacoesSilencioso();
+  }
   App.salvandoSaida = false;
   const btnConfirmar = document.getElementById('btn-confirmar-saida');
   if (btnConfirmar) {
