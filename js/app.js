@@ -1002,60 +1002,79 @@ App.atualizarInfoProdutoEntrada = () => {
   }
 };
 
-App.salvarEntrada = async (e) => {
-  e.preventDefault();
-  const prodId = Number(document.getElementById('entrada-produto').value);
-  const quantidade = parseFloat(document.getElementById('entrada-qtd').value);
-  const valorUnitario = parseFloat(document.getElementById('entrada-valor-unitario').value) || 0;
-  const fornecedorOuNF = document.getElementById('entrada-fornecedor').value.trim();
-  const motivo = document.getElementById('entrada-motivo').value.trim();
-  const dataHora = document.getElementById('entrada-data').value || new Date().toISOString();
-  const responsavel = document.getElementById('entrada-responsavel').value.trim() || 'ALMOXARIFADO';
+App.salvandoEntrada = false;
 
-  if (!prodId || isNaN(quantidade) || quantidade <= 0) {
-    App.mostrarToast('Selecione um produto e informe uma quantidade positiva válida.', 'warning');
+App.salvarEntrada = async (e) => {
+  if (e) {
+    if (e.preventDefault) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+  }
+
+  if (App.salvandoEntrada) {
+    console.warn('Bloqueio anti-duplicação: entrada já em processamento.');
     return;
   }
+  App.salvandoEntrada = true;
 
-  const p = App.produtos.find(x => x.id === prodId);
-  if (!p) return;
+  try {
+    const prodId = Number(document.getElementById('entrada-produto').value);
+    const quantidade = parseFloat(document.getElementById('entrada-qtd').value);
+    const valorUnitario = parseFloat(document.getElementById('entrada-valor-unitario').value) || 0;
+    const fornecedorOuNF = document.getElementById('entrada-fornecedor').value.trim();
+    const motivo = document.getElementById('entrada-motivo').value.trim();
+    const dataHora = document.getElementById('entrada-data').value || new Date().toISOString();
+    const responsavel = document.getElementById('entrada-responsavel').value.trim() || 'ALMOXARIFADO CENTRAL';
 
-  const estoqueAnterior = Number(p.estoqueAtual) || 0;
-  const novoEstoque = estoqueAnterior + quantidade;
+    if (!prodId || isNaN(quantidade) || quantidade <= 0) {
+      App.mostrarToast('Selecione um produto e informe uma quantidade positiva válida.', 'warning');
+      return;
+    }
 
-  // Atualiza produto
-  p.estoqueAtual = novoEstoque;
-  if (valorUnitario > 0) {
-    p.valorUnitario = valorUnitario; // Atualiza o preço com base na última reposição
+    const p = App.produtos.find(x => x.id === prodId);
+    if (!p) return;
+
+    const estoqueAnterior = Number(p.estoqueAtual) || 0;
+    const novoEstoque = estoqueAnterior + quantidade;
+
+    // Atualiza produto
+    p.estoqueAtual = novoEstoque;
+    if (valorUnitario > 0) {
+      p.valorUnitario = valorUnitario; // Atualiza o preço com base na última reposição
+    }
+    p.dataAtualizacao = new Date().toISOString();
+    await window.db.update('produtos', p);
+
+    // Registra movimentação
+    await window.db.add('movimentacoes', {
+      tipo: 'ENTRADA',
+      subtipo: 'COMPRA_REPOSICAO',
+      produtoId: p.id,
+      produtoCodigo: p.codigo,
+      produtoNome: p.nome,
+      produtoUnidade: p.unidade,
+      quantidade,
+      valorUnitario: valorUnitario > 0 ? valorUnitario : p.valorUnitario,
+      valorTotal: quantidade * (valorUnitario > 0 ? valorUnitario : p.valorUnitario),
+      estoqueAnterior,
+      estoqueNovo: novoEstoque,
+      dataHora,
+      unidadeDestino: 'ALMOXARIFADO CENTRAL',
+      fornecedorOuNF,
+      responsavel,
+      motivo: motivo || 'Entrada / Reposição de Estoque'
+    });
+
+    App.notificarSalvamento();
+    App.fecharModal('modal-entrada');
+    App.mostrarToast(`Entrada de ${quantidade} ${p.unidade} de "${p.nome}" registrada! Novo saldo: ${novoEstoque}`, 'success');
+    await App.carregarDados();
+    App.renderizarTudo();
+  } catch (err) {
+    console.error('Erro ao salvar entrada:', err);
+    App.mostrarToast('Erro ao registrar entrada de material.', 'danger');
+  } finally {
+    App.salvandoEntrada = false;
   }
-  p.dataAtualizacao = new Date().toISOString();
-  await window.db.update('produtos', p);
-
-  // Registra movimentação
-  await window.db.add('movimentacoes', {
-    tipo: 'ENTRADA',
-    subtipo: 'COMPRA_REPOSICAO',
-    produtoId: p.id,
-    produtoCodigo: p.codigo,
-    produtoNome: p.nome,
-    produtoUnidade: p.unidade,
-    quantidade,
-    valorUnitario: valorUnitario > 0 ? valorUnitario : p.valorUnitario,
-    valorTotal: quantidade * (valorUnitario > 0 ? valorUnitario : p.valorUnitario),
-    estoqueAnterior,
-    estoqueNovo: novoEstoque,
-    dataHora,
-    unidadeDestino: 'ALMOXARIFADO CENTRAL',
-    fornecedorOuNF,
-    responsavel,
-    motivo: motivo || 'Entrada / Reposição de Estoque'
-  });
-
-  App.notificarSalvamento();
-  App.fecharModal('modal-entrada');
-  App.mostrarToast(`Entrada de ${quantidade} ${p.unidade} de "${p.nome}" registrada! Novo saldo: ${novoEstoque}`, 'success');
-  await App.carregarDados();
-  App.renderizarTudo();
 };
 
 /* RETIRADA / SAÍDA */
@@ -1276,63 +1295,21 @@ App.aoSelecionarFuncionarioRetirada = (termo) => {
   }
 };
 
+App.salvandoSaida = false;
+
 App.salvarSaida = async (e) => {
-  if (e && e.preventDefault) e.preventDefault();
-
-  // Trava anti-duplo clique e anti-concorrência
-  if (App.salvandoSaida) return;
-
-  // Se o usuário selecionou um produto e informou quantidade mas não clicou em "+ Adicionar Item", inclui automaticamente
-  const selectProd = document.getElementById('saida-produto');
-  const inputQtd = document.getElementById('saida-qtd');
-  if (selectProd && selectProd.value && inputQtd && parseFloat(inputQtd.value) > 0) {
-    App.adicionarItemRetirada();
+  if (e) {
+    if (e.preventDefault) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
   }
 
-  if (!App.itensRetirada || App.itensRetirada.length === 0) {
-    App.mostrarToast('Por favor, selecione e adicione ao menos um material à lista de retirada.', 'warning');
-    if (selectProd) selectProd.focus();
+  // Trava anti-duplo clique e anti-concorrência IMEDIATA (síncrona, antes de qualquer await)
+  if (App.salvandoSaida) {
+    console.warn('Bloqueio anti-duplicação: salvamento de saída já em processamento.');
     return;
   }
-
-  const matriculaOuNome = document.getElementById('saida-funcionario-input').value.trim();
-  const unidadeDestino = document.getElementById('saida-unidade').value.trim().toUpperCase();
-  const motivo = document.getElementById('saida-motivo').value.trim();
-  const dataHora = document.getElementById('saida-data').value || new Date().toISOString();
-  const responsavel = document.getElementById('saida-responsavel').value.trim() || 'ALMOXARIFADO CENTRAL';
-
-  if (!matriculaOuNome) {
-    App.mostrarToast('Informe o colaborador responsável pela retirada do material.', 'warning');
-    document.getElementById('saida-funcionario-input').focus();
-    return;
-  }
-
-  if (!unidadeDestino) {
-    App.mostrarToast('A unidade de destino deve ser preenchida.', 'warning');
-    document.getElementById('saida-unidade').focus();
-    return;
-  }
-
-  // Validação atualizada de estoque no banco de dados para todos os itens da retirada
-  const produtosNoBanco = await window.db.getAll('produtos');
-  for (const item of App.itensRetirada) {
-    const p = produtosNoBanco.find(x => x.id === item.produtoId);
-    if (!p) {
-      App.mostrarToast(`Produto "${item.produtoNome}" não foi encontrado no banco de dados.`, 'danger');
-      return;
-    }
-    if (item.quantidade > p.estoqueAtual) {
-      App.mostrarToast(`Saldo insuficiente para "${p.nome}"! Estoque atual: ${p.estoqueAtual} ${p.unidade}, quantidade solicitada: ${item.quantidade} ${p.unidade}.`, 'danger');
-      return;
-    }
-  }
-
-  const emp = App.selectedEmployeeForExit || {
-    nome: matriculaOuNome,
-    matricula: 'N/A',
-    cargo: 'N/A',
-    local: unidadeDestino
-  };
+  App.salvandoSaida = true;
 
   const btnConfirmar = document.getElementById('btn-confirmar-saida');
   const txtOriginal = btnConfirmar ? btnConfirmar.innerText : 'Confirmar Retirada';
@@ -1340,19 +1317,101 @@ App.salvarSaida = async (e) => {
     btnConfirmar.disabled = true;
     btnConfirmar.innerText = 'Processando...';
   }
-  App.salvandoSaida = true;
+
+  const liberarTrava = () => {
+    App.salvandoSaida = false;
+    if (btnConfirmar) {
+      btnConfirmar.disabled = false;
+      btnConfirmar.innerText = txtOriginal;
+    }
+  };
 
   try {
+    // Se o usuário selecionou um produto e informou quantidade mas não clicou em "+ Adicionar Item", inclui automaticamente
+    const selectProd = document.getElementById('saida-produto');
+    const inputQtd = document.getElementById('saida-qtd');
+    if (selectProd && selectProd.value && inputQtd && parseFloat(inputQtd.value) > 0) {
+      const adicionou = App.adicionarItemRetirada();
+      if (!adicionou && (!App.itensRetirada || App.itensRetirada.length === 0)) {
+        liberarTrava();
+        return;
+      }
+    }
+
+    if (!App.itensRetirada || App.itensRetirada.length === 0) {
+      App.mostrarToast('Por favor, selecione e adicione ao menos um material à lista de retirada.', 'warning');
+      if (selectProd) selectProd.focus();
+      liberarTrava();
+      return;
+    }
+
+    const matriculaOuNome = document.getElementById('saida-funcionario-input').value.trim();
+    const unidadeDestino = document.getElementById('saida-unidade').value.trim().toUpperCase();
+    const motivo = document.getElementById('saida-motivo').value.trim();
+    const dataHora = document.getElementById('saida-data').value || new Date().toISOString();
+    const responsavel = document.getElementById('saida-responsavel').value.trim() || 'ALMOXARIFADO CENTRAL';
+
+    if (!matriculaOuNome) {
+      App.mostrarToast('Informe o colaborador responsável pela retirada do material.', 'warning');
+      document.getElementById('saida-funcionario-input').focus();
+      liberarTrava();
+      return;
+    }
+
+    if (!unidadeDestino) {
+      App.mostrarToast('A unidade de destino deve ser preenchida.', 'warning');
+      document.getElementById('saida-unidade').focus();
+      liberarTrava();
+      return;
+    }
+
+    // Validação atualizada de estoque no banco de dados para todos os itens da retirada
+    const produtosNoBanco = await window.db.getAll('produtos');
+    for (const item of App.itensRetirada) {
+      const p = produtosNoBanco.find(x => x.id === item.produtoId);
+      if (!p) {
+        App.mostrarToast(`Produto "${item.produtoNome}" não foi encontrado no banco de dados.`, 'danger');
+        liberarTrava();
+        return;
+      }
+      if (item.quantidade > p.estoqueAtual) {
+        App.mostrarToast(`Saldo insuficiente para "${p.nome}"! Estoque atual: ${p.estoqueAtual} ${p.unidade}, quantidade solicitada: ${item.quantidade} ${p.unidade}.`, 'danger');
+        liberarTrava();
+        return;
+      }
+    }
+
+    const emp = App.selectedEmployeeForExit || {
+      nome: matriculaOuNome,
+      matricula: 'N/A',
+      cargo: 'N/A',
+      local: unidadeDestino
+    };
+
+    // Snapshot imediato e esvaziamento da lista para garantir que nenhuma reentrada processe os mesmos itens
+    const itensParaRetirar = [...App.itensRetirada];
+    App.itensRetirada = [];
+    App.renderizarItensRetirada();
+
     // Código de transação unificado para agrupar todos os materiais na mesma Cautela de Retirada
     const transacaoId = 'RET-' + Date.now().toString().slice(-6);
 
+    // Salvaguarda no banco: evita duplicatas da mesma transação e produto
+    const movsExistentes = await window.db.getAll('movimentacoes');
+
     // Deduz estoque e salva cada movimentação de saída
-    for (const item of App.itensRetirada) {
-      const p = App.produtos.find(x => x.id === item.produtoId);
+    for (const item of itensParaRetirar) {
+      const jaGravado = movsExistentes.some(m => m.transacaoId === transacaoId && m.produtoId === item.produtoId);
+      if (jaGravado) {
+        console.warn(`Movimentação ${transacaoId} para ${item.produtoNome} já existe no banco. Pulando duplicação.`);
+        continue;
+      }
+
+      const p = App.produtos.find(x => x.id === item.produtoId) || produtosNoBanco.find(x => x.id === item.produtoId);
       if (!p) continue;
 
       const estoqueAnterior = Number(p.estoqueAtual);
-      const novoEstoque = estoqueAnterior - item.quantidade;
+      const novoEstoque = Math.max(0, estoqueAnterior - item.quantidade);
 
       // Atualiza saldo do produto
       p.estoqueAtual = novoEstoque;
@@ -1383,8 +1442,17 @@ App.salvarSaida = async (e) => {
       });
     }
 
-    const totalPecas = App.itensRetirada.reduce((acc, i) => acc + i.quantidade, 0);
-    const qtdMateriais = App.itensRetirada.length;
+    const totalPecas = itensParaRetirar.reduce((acc, i) => acc + i.quantidade, 0);
+    const qtdMateriais = itensParaRetirar.length;
+
+    // Limpa o formulário de saída completamente
+    const formSaida = document.getElementById('form-saida');
+    if (formSaida) formSaida.reset();
+    App.selectedEmployeeForExit = null;
+    const empInfo = document.getElementById('saida-emp-info');
+    if (empInfo) empInfo.style.display = 'none';
+    const prodInfo = document.getElementById('saida-produto-info');
+    if (prodInfo) prodInfo.innerHTML = '';
 
     App.notificarSalvamento();
     App.fecharModal('modal-saida');
@@ -1663,41 +1731,57 @@ App.abrirModalNovoColaborador = () => {
   App.abrirModal('modal-colaborador');
 };
 
+App.salvandoColaborador = false;
+
 App.salvarColaborador = async (e) => {
-  e.preventDefault();
-  const matricula = document.getElementById('colab-matricula').value.trim();
-  const nome = document.getElementById('colab-nome').value.trim().toUpperCase();
-  const cpf = document.getElementById('colab-cpf').value.trim();
-  const cargo = document.getElementById('colab-cargo').value.trim().toUpperCase();
-  const local = document.getElementById('colab-local').value.trim().toUpperCase();
-
-  if (!matricula || !nome || !local) {
-    App.mostrarToast('Preencha matrícula, nome e unidade do colaborador.', 'warning');
-    return;
+  if (e) {
+    if (e.preventDefault) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
   }
 
-  // Verifica se matrícula já existe
-  const existe = App.colaboradores.find(c => c.matricula === matricula);
-  if (existe) {
-    App.mostrarToast(`Já existe um colaborador com a matrícula ${matricula}!`, 'danger');
-    return;
+  if (App.salvandoColaborador) return;
+  App.salvandoColaborador = true;
+
+  try {
+    const matricula = document.getElementById('colab-matricula').value.trim();
+    const nome = document.getElementById('colab-nome').value.trim().toUpperCase();
+    const cpf = document.getElementById('colab-cpf').value.trim();
+    const cargo = document.getElementById('colab-cargo').value.trim().toUpperCase();
+    const local = document.getElementById('colab-local').value.trim().toUpperCase();
+
+    if (!matricula || !nome || !local) {
+      App.mostrarToast('Preencha matrícula, nome e unidade do colaborador.', 'warning');
+      return;
+    }
+
+    // Verifica se matrícula já existe
+    const existe = App.colaboradores.find(c => c.matricula === matricula);
+    if (existe) {
+      App.mostrarToast(`Já existe um colaborador com a matrícula ${matricula}!`, 'danger');
+      return;
+    }
+
+    await window.db.add('colaboradores', {
+      matricula,
+      nome,
+      cpf,
+      cargo,
+      local,
+      ativo: true,
+      dataCadastro: new Date().toISOString()
+    });
+
+    App.notificarSalvamento();
+    App.fecharModal('modal-colaborador');
+    App.mostrarToast(`Colaborador ${nome} cadastrado com sucesso!`, 'success');
+    await App.carregarDados();
+    App.renderizarTudo();
+  } catch (err) {
+    console.error('Erro ao salvar colaborador:', err);
+    App.mostrarToast('Erro ao salvar colaborador.', 'danger');
+  } finally {
+    App.salvandoColaborador = false;
   }
-
-  await window.db.add('colaboradores', {
-    matricula,
-    nome,
-    cpf,
-    cargo,
-    local,
-    ativo: true,
-    dataCadastro: new Date().toISOString()
-  });
-
-  App.notificarSalvamento();
-  App.fecharModal('modal-colaborador');
-  App.mostrarToast(`Colaborador ${nome} cadastrado com sucesso!`, 'success');
-  await App.carregarDados();
-  App.renderizarTudo();
 };
 
 App.abrirHistoricoColaborador = (matricula) => {
