@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T14:01:56.569Z",
+  "ultimaAtualizacao": "2026-11-18T14:02:43.391Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -11,14 +11,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 38,
-      "estoqueAtual": 45,
+      "estoqueAtual": 41,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:35:38.276Z",
       "id": 9,
-      "dataAtualizacao": "2026-11-18T12:58:28.075Z"
+      "dataAtualizacao": "2026-11-18T14:02:38.253Z"
     },
     {
       "codigo": "EPI-002",
@@ -2432,6 +2432,50 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 117
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-558252",
+      "produtoId": 9,
+      "produtoCodigo": "EPI-001",
+      "produtoNome": "ÓCULOS DE SEGURANÇA INCOLOR",
+      "produtoUnidade": "UN",
+      "quantidade": 2,
+      "valorUnitario": 5.9,
+      "valorTotal": 11.8,
+      "estoqueAnterior": 45,
+      "estoqueNovo": 43,
+      "dataHora": "2026-11-18T14:02",
+      "matriculaFuncionario": "550",
+      "nomeFuncionario": "TSA",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 118
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-558253",
+      "produtoId": 9,
+      "produtoCodigo": "EPI-001",
+      "produtoNome": "ÓCULOS DE SEGURANÇA INCOLOR",
+      "produtoUnidade": "UN",
+      "quantidade": 2,
+      "valorUnitario": 5.9,
+      "valorTotal": 11.8,
+      "estoqueAnterior": 43,
+      "estoqueNovo": 41,
+      "dataHora": "2026-11-18T14:02",
+      "matriculaFuncionario": "550",
+      "nomeFuncionario": "TSA",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "TSA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 119
     }
   ],
   "colaboradores": [
