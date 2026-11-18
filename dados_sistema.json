@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T16:37:00.540Z",
+  "ultimaAtualizacao": "2026-11-18T16:37:27.902Z",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -297,14 +297,14 @@
       "unidade": "PAR",
       "valorUnitario": 174.99,
       "estoqueInicial": 7,
-      "estoqueAtual": 7,
+      "estoqueAtual": 4,
       "estoqueMinimo": 5,
       "localizacao": "",
       "descricao": "CA: 42374",
       "foto": "",
       "dataCadastro": "2026-10-08T18:56:23.223Z",
       "id": 27,
-      "dataAtualizacao": "2026-11-18T16:34:42.258Z"
+      "dataAtualizacao": "2026-11-18T16:37:23.256Z"
     },
     {
       "codigo": "EPI-020",
@@ -2391,25 +2391,6 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 114
-    },
-    {
-      "tipo": "ENTRADA",
-      "subtipo": "COMPRA_REPOSICAO",
-      "produtoId": 27,
-      "produtoCodigo": "EPI-019",
-      "produtoNome": "BOTA DE SEGURANÇA 42",
-      "produtoUnidade": "PAR",
-      "quantidade": 3,
-      "valorUnitario": 174.99,
-      "valorTotal": 524.97,
-      "estoqueAnterior": 1,
-      "estoqueNovo": 4,
-      "dataHora": "2026-11-18T13:03",
-      "unidadeDestino": "ALMOXARIFADO CENTRAL",
-      "fornecedorOuNF": "",
-      "responsavel": "Almoxarifado Santos",
-      "motivo": "Entrada / Reposição de Estoque",
-      "id": 115
     }
   ],
   "colaboradores": [
