@@ -1,8 +1,8 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T16:58:51.013Z",
-  "ultimoAutorSessionId": "cli_mwmd5gsh_3ui90b",
-  "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
+  "ultimaAtualizacao": "2026-11-18T17:00:35.078Z",
+  "ultimoAutorSessionId": "cli_mwmd4zhp_h7qcvo",
+  "dispositivoOrigem": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb",
   "usuario": "admin",
   "produtos": [
     {
@@ -12,14 +12,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 38,
-      "estoqueAtual": 48,
+      "estoqueAtual": 49,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:35:38.276Z",
       "id": 9,
-      "dataAtualizacao": "2026-11-18T16:58:48.534Z"
+      "dataAtualizacao": "2026-11-18T17:00:32.350Z"
     },
     {
       "codigo": "EPI-002",
@@ -2477,6 +2477,28 @@
       "motivo": "Retirada de Material para Operação / Manutenção",
       "responsavel": "Almoxarifado Central",
       "id": 121
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-486134",
+      "produtoId": 10,
+      "produtoCodigo": "EPI-002",
+      "produtoNome": "ÓCULOS DE SEGURANÇA LENTE ESCURA",
+      "produtoUnidade": "UN",
+      "quantidade": 3,
+      "valorUnitario": 5.9,
+      "valorTotal": 17.700000000000003,
+      "estoqueAnterior": 26,
+      "estoqueNovo": 23,
+      "dataHora": "2026-11-18T16:31",
+      "matriculaFuncionario": "136",
+      "nomeFuncionario": "ANDRE LUIZ APARECIDO CORDEIRO",
+      "cargoFuncionario": "ELETRICISTA",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 122
     },
     {
       "tipo": "SAIDA",
