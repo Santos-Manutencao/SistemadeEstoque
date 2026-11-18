@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T16:57:39.908Z",
+  "ultimaAtualizacao": "2026-11-18T16:58:22.475Z",
   "ultimoAutorSessionId": "cli_mwmd5gsh_3ui90b",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
@@ -12,14 +12,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 38,
-      "estoqueAtual": 46,
+      "estoqueAtual": 47,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:35:38.276Z",
       "id": 9,
-      "dataAtualizacao": "2026-11-18T16:57:25.833Z"
+      "dataAtualizacao": "2026-11-18T16:58:18.950Z"
     },
     {
       "codigo": "EPI-002",
@@ -28,14 +28,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 30,
-      "estoqueAtual": 41,
+      "estoqueAtual": 44,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:37:24.586Z",
       "id": 10,
-      "dataAtualizacao": "2026-11-18T16:57:34.949Z"
+      "dataAtualizacao": "2026-11-18T16:58:21.700Z"
     },
     {
       "codigo": "EPI-003",
