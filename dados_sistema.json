@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T17:24:48.792Z",
+  "ultimaAtualizacao": "2026-11-18T17:26:08.542Z",
   "ultimoAutorSessionId": "cli_mwmd5gsh_3ui90b",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
@@ -12,14 +12,14 @@
       "unidade": "UN",
       "valorUnitario": 5.9,
       "estoqueInicial": 38,
-      "estoqueAtual": 25,
+      "estoqueAtual": 45,
       "estoqueMinimo": 12,
       "localizacao": "",
       "descricao": "CA: 9722",
       "foto": "",
       "dataCadastro": "2026-10-08T17:35:38.276Z",
       "id": 9,
-      "dataAtualizacao": "2026-11-18T17:24:46.151Z"
+      "dataAtualizacao": "2026-11-18T17:26:05.800Z"
     },
     {
       "codigo": "EPI-002",
@@ -540,6 +540,25 @@
     }
   ],
   "movimentacoes": [
+    {
+      "tipo": "ENTRADA",
+      "subtipo": "COMPRA_REPOSICAO",
+      "produtoId": 9,
+      "produtoCodigo": "EPI-001",
+      "produtoNome": "ÓCULOS DE SEGURANÇA INCOLOR",
+      "produtoUnidade": "UN",
+      "quantidade": 20,
+      "valorUnitario": 5.9,
+      "valorTotal": 118,
+      "estoqueAnterior": 25,
+      "estoqueNovo": 45,
+      "dataHora": "2026-11-18T17:25",
+      "unidadeDestino": "ALMOXARIFADO CENTRAL",
+      "fornecedorOuNF": "",
+      "responsavel": "Almoxarifado Santos",
+      "motivo": "Entrada / Reposição de Estoque",
+      "id": 125
+    },
     {
       "tipo": "SAIDA",
       "subtipo": "RETIRADA_COLABORADOR",
