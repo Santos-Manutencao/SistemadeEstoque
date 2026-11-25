@@ -1,7 +1,7 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-18T17:26:46.511Z",
-  "ultimoAutorSessionId": "cli_mwmd5gsh_3ui90b",
+  "ultimaAtualizacao": "2026-11-25T17:44:34.129Z",
+  "ultimoAutorSessionId": "cli_mww0hed1_9b1hwf",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -171,14 +171,14 @@
       "unidade": "PAR",
       "valorUnitario": 25.5,
       "estoqueInicial": 13,
-      "estoqueAtual": 6,
+      "estoqueAtual": 2,
       "estoqueMinimo": 5,
       "localizacao": "",
       "descricao": "CA: 50297",
       "foto": "",
       "dataCadastro": "2026-10-08T18:39:25.499Z",
       "id": 19,
-      "dataAtualizacao": "2026-11-18T13:00:35.568Z"
+      "dataAtualizacao": "2026-11-25T17:44:29.196Z"
     },
     {
       "codigo": "EPI-012",
@@ -540,6 +540,28 @@
     }
   ],
   "movimentacoes": [
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-669193",
+      "produtoId": 19,
+      "produtoCodigo": "EPI-011",
+      "produtoNome": "PERNEIRA",
+      "produtoUnidade": "PAR",
+      "quantidade": 4,
+      "valorUnitario": 25.5,
+      "valorTotal": 102,
+      "estoqueAnterior": 6,
+      "estoqueNovo": 2,
+      "dataHora": "2026-11-25T17:44",
+      "matriculaFuncionario": "500",
+      "nomeFuncionario": "CDA ADM",
+      "cargoFuncionario": "GERENTE",
+      "unidadeDestino": "CDA",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 127
+    },
     {
       "tipo": "SAIDA",
       "subtipo": "RETIRADA_COLABORADOR",
