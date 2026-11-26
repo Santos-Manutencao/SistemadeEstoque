@@ -1,7 +1,7 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-25T17:46:51.291Z",
-  "ultimoAutorSessionId": "cli_mww0hed1_9b1hwf",
+  "ultimaAtualizacao": "2026-11-26T16:24:51.523Z",
+  "ultimoAutorSessionId": "cli_mwxi3qg8_j1kd1r",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
   "produtos": [
@@ -3434,6 +3434,16 @@
       "ativo": true,
       "dataCadastro": "2026-10-26T18:21:19.444Z",
       "id": 81
+    },
+    {
+      "matricula": "1000",
+      "nome": "ADM",
+      "cpf": "",
+      "cargo": "ADM",
+      "local": "ADM",
+      "ativo": true,
+      "dataCadastro": "2026-11-26T16:24:48.455Z",
+      "id": 82
     }
   ]
 }
