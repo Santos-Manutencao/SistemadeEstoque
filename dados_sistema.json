@@ -1,6 +1,6 @@
 {
   "versao": "1.0",
-  "ultimaAtualizacao": "2026-11-26T16:24:51.523Z",
+  "ultimaAtualizacao": "2026-11-26T16:25:45.506Z",
   "ultimoAutorSessionId": "cli_mwxi3qg8_j1kd1r",
   "dispositivoOrigem": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap",
   "usuario": "admin",
@@ -60,14 +60,14 @@
       "unidade": "PAR",
       "valorUnitario": 15.99,
       "estoqueInicial": 80,
-      "estoqueAtual": 35,
+      "estoqueAtual": 33,
       "estoqueMinimo": 20,
       "localizacao": "",
       "descricao": "CA: 12230",
       "foto": "",
       "dataCadastro": "2026-10-08T18:08:01.077Z",
       "id": 12,
-      "dataAtualizacao": "2026-11-25T17:46:45.714Z"
+      "dataAtualizacao": "2026-11-26T16:25:40.709Z"
     },
     {
       "codigo": "EPI-005",
@@ -92,14 +92,14 @@
       "unidade": "UN",
       "valorUnitario": 18.5,
       "estoqueInicial": 9,
-      "estoqueAtual": 7,
+      "estoqueAtual": 6,
       "estoqueMinimo": 5,
       "localizacao": "",
       "descricao": "",
       "foto": "",
       "dataCadastro": "2026-10-08T18:20:14.945Z",
       "id": 14,
-      "dataAtualizacao": "2026-11-18T12:59:15.285Z"
+      "dataAtualizacao": "2026-11-26T16:25:40.711Z"
     },
     {
       "codigo": "EPI-007",
@@ -541,6 +541,50 @@
     }
   ],
   "movimentacoes": [
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-340707",
+      "produtoId": 14,
+      "produtoCodigo": "EPI-006",
+      "produtoNome": "COLETE REFLETIVO XG",
+      "produtoUnidade": "UN",
+      "quantidade": 1,
+      "valorUnitario": 18.5,
+      "valorTotal": 18.5,
+      "estoqueAnterior": 7,
+      "estoqueNovo": 6,
+      "dataHora": "2026-11-26T16:24",
+      "matriculaFuncionario": "1000",
+      "nomeFuncionario": "ADM",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "ADM",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 135
+    },
+    {
+      "tipo": "SAIDA",
+      "subtipo": "RETIRADA_COLABORADOR",
+      "transacaoId": "RET-340707",
+      "produtoId": 12,
+      "produtoCodigo": "EPI-004",
+      "produtoNome": "LUVA DE SEGURANÇA VAQUETA",
+      "produtoUnidade": "PAR",
+      "quantidade": 2,
+      "valorUnitario": 15.99,
+      "valorTotal": 31.98,
+      "estoqueAnterior": 35,
+      "estoqueNovo": 33,
+      "dataHora": "2026-11-26T16:24",
+      "matriculaFuncionario": "1000",
+      "nomeFuncionario": "ADM",
+      "cargoFuncionario": "ADM",
+      "unidadeDestino": "ADM",
+      "motivo": "Retirada de Material para Operação / Manutenção",
+      "responsavel": "Almoxarifado Central",
+      "id": 134
+    },
     {
       "tipo": "SAIDA",
       "subtipo": "RETIRADA_COLABORADOR",
